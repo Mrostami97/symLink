@@ -1,4 +1,3 @@
-
 name: Build and Publish APK
 
 on:
@@ -12,68 +11,53 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    timeout-minutes: 20
     steps:
-      - name: Checkout Repository
+      - name: Check out app source
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
-      - name: Setup Java
+      - name: Set up Java
         uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Find Android Project
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          # AI Studio sync omits the wrapper executable and JAR.
+          # Keep this version aligned with gradle-wrapper.properties.
+          gradle-version: '9.3.1'
+
+      - name: Restore CI debug signing key
+        env:
+          DEBUG_KEYSTORE_BASE64: ${{ secrets.SIMLINK_CI_DEBUG_KEYSTORE_BASE64 }}
         run: |
-          echo "Searching project files..."
-          ls -la
-
-          find . -name "build.gradle*"
-          find . -name "settings.gradle*"
-          find . -name "gradlew"
-
-          GRADLEW=$(find . -type f -name "gradlew" -print -quit)
-
-          if [ -z "$GRADLEW" ]; then
-            echo "::error::Gradle wrapper not found!"
+          if [[ -z "$DEBUG_KEYSTORE_BASE64" ]]; then
+            echo "::error::SIMLINK_CI_DEBUG_KEYSTORE_BASE64 is missing."
             exit 1
           fi
+          umask 077
+          printf '%s' "$DEBUG_KEYSTORE_BASE64" | base64 --decode > debug.keystore
 
-          PROJECT_DIR=$(dirname "$GRADLEW")
-          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
+      - name: Build debug APK
+        run: gradle :app:assembleDebug --stacktrace
 
-          echo "Android project found: $PROJECT_DIR"
-
-      - name: Build APK
+      - name: Verify APK
         run: |
-          cd "$PROJECT_DIR"
-          chmod +x gradlew
-          ./gradlew assembleDebug --stacktrace
-
-      - name: Find APK
-        run: |
-          mkdir -p release-files
-
-          find "$PROJECT_DIR" -type f \
-            -path "*/build/outputs/apk/*" \
-            -name "*.apk" \
-            -exec cp {} release-files/ \;
-
-          if ! compgen -G "release-files/*.apk" > /dev/null; then
-            echo "::error::APK file not found!"
-            exit 1
-          fi
-
-          ls -lh release-files/
+          cp app/build/outputs/apk/debug/app-debug.apk SimLink-debug.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs SimLink-debug.apk
 
       - name: Publish APK
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           gh release create \
             "build-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
-            release-files/*.apk \
+            SimLink-debug.apk \
             --target "$GITHUB_SHA" \
-            --title "Version ${GITHUB_RUN_NUMBER}" \
+            --title "SimLink debug build ${GITHUB_RUN_NUMBER}" \
             --generate-notes \
             --prerelease
