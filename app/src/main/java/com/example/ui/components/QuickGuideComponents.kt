@@ -31,6 +31,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,9 +43,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.bridge.DeviceRole
 import com.example.ui.i18n.LocalAppStrings
-import com.example.ui.theme.ConnectedEmerald
-import com.example.ui.theme.SignalCyan
-import com.example.ui.theme.Sim2Amber
 
 @Composable
 fun QuickStartChecklistCard(
@@ -57,11 +55,12 @@ fun QuickStartChecklistCard(
     modifier: Modifier = Modifier
 ) {
     val strings = LocalAppStrings.current
+    val primaryAccent = MaterialTheme.colorScheme.primary
     GlassBridgeCard(
         modifier = modifier
             .fillMaxWidth()
             .testTag("quick_start_checklist_card"),
-        accentColor = SignalCyan,
+        accentColor = primaryAccent,
         accentStrength = 0.36f,
         cornerRadius = 22.dp
     ) {
@@ -82,13 +81,13 @@ fun QuickStartChecklistCard(
                         modifier = Modifier
                             .size(30.dp)
                             .clip(RoundedCornerShape(9.dp))
-                            .background(SignalCyan.copy(alpha = 0.16f)),
+                            .background(primaryAccent.copy(alpha = 0.16f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Filled.TipsAndUpdates,
                             contentDescription = null,
-                            tint = SignalCyan,
+                            tint = primaryAccent,
                             modifier = Modifier.size(17.dp)
                         )
                     }
@@ -137,7 +136,7 @@ private fun ChecklistStepRow(
     done: Boolean,
     onClick: (() -> Unit)?
 ) {
-    val accent = if (done) ConnectedEmerald else Sim2Amber
+    val accent = if (done) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.secondary
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -181,9 +180,14 @@ private fun ChecklistStepRow(
 
 @Composable
 fun QuickHelpDialog(
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onReplayAnimatedGuide: (() -> Unit)? = null
 ) {
     val strings = LocalAppStrings.current
+    val primaryAccent = MaterialTheme.colorScheme.primary
+    val emeraldAccent = MaterialTheme.colorScheme.tertiary
+    val amberAccent = MaterialTheme.colorScheme.secondary
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -191,7 +195,7 @@ fun QuickHelpDialog(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Icon(Icons.Filled.TipsAndUpdates, contentDescription = null, tint = SignalCyan)
+                Icon(Icons.Filled.TipsAndUpdates, contentDescription = null, tint = primaryAccent)
                 Text(strings.helpTitle, fontWeight = FontWeight.Bold)
             }
         },
@@ -199,21 +203,34 @@ fun QuickHelpDialog(
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 HelpGuideItem(
                     icon = Icons.Filled.Devices,
-                    accent = SignalCyan,
+                    accent = primaryAccent,
                     text = strings.helpStep1
                 )
                 HelpGuideItem(
                     icon = Icons.Filled.QrCodeScanner,
-                    accent = ConnectedEmerald,
+                    accent = emeraldAccent,
                     text = strings.helpStep2
                 )
                 HelpGuideItem(
                     icon = Icons.Filled.NotificationsActive,
-                    accent = Sim2Amber,
+                    accent = amberAccent,
                     text = strings.helpStep3
                 )
             }
         },
+        dismissButton = if (onReplayAnimatedGuide != null) {
+            {
+                TextButton(
+                    onClick = {
+                        onDismiss()
+                        onReplayAnimatedGuide()
+                    },
+                    modifier = Modifier.testTag("help_replay_onboarding_button")
+                ) {
+                    Text(strings.replayOnboardingLabel, fontWeight = FontWeight.SemiBold)
+                }
+            }
+        } else null,
         confirmButton = {
             Button(
                 onClick = onDismiss,

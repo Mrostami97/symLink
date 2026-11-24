@@ -192,7 +192,29 @@ data class AppStrings(
     val batteryChangeLabel: String,
     val batterySamplesLabel: String,
     val batteryEmptyCompanion: String,
-    val batteryCollectingHint: String
+    val batteryCollectingHint: String,
+    // Manual Light/Dark Theme Override & Animated Onboarding Guide
+    val themeModeTitle: String,
+    val themeModeSubtitleDark: String,
+    val themeModeSubtitleLight: String,
+    val replayOnboardingLabel: String,
+    val replayOnboardingSubtitle: String,
+    val onboardingSkip: String,
+    val onboardingNext: String,
+    val onboardingBack: String,
+    val onboardingGetStarted: String,
+    val onboardingBadge1: String,
+    val onboardingTitle1: String,
+    val onboardingDesc1: String,
+    val onboardingBadge2: String,
+    val onboardingTitle2: String,
+    val onboardingDesc2: String,
+    val onboardingBadge3: String,
+    val onboardingTitle3: String,
+    val onboardingDesc3: String,
+    val onboardingBadge4: String,
+    val onboardingTitle4: String,
+    val onboardingDesc4: String
 )
 
 val PersianStrings = AppStrings(
@@ -320,7 +342,7 @@ val PersianStrings = AppStrings(
     languageLabel = "زبان برنامه",
     persianLabel = "فارسی (RTL)",
     englishLabel = "English (LTR)",
-    darkThemeLabel = "تم تاریک مدرن (Obsidian)",
+    darkThemeLabel = "حالت تاریک (مستقل از تنظیمات گوشی)",
     deviceNameLabel = "نام نمایشی دستگاه",
     defaultSimLabel = "سیم‌کارت پیش‌فرض",
     autoReconnectLabel = "اتصال مجدد خودکار",
@@ -370,7 +392,28 @@ val PersianStrings = AppStrings(
     batteryChangeLabel = "تغییر",
     batterySamplesLabel = "نمونه",
     batteryEmptyCompanion = "پس از اتصال به گوشی میزبان، نمودار تاریخچه مصرف و شارژ باتری آن به‌صورت زنده در اینجا رسم می‌شود.",
-    batteryCollectingHint = "در حال ثبت نمونه‌های زنده باتری..."
+    batteryCollectingHint = "در حال ثبت نمونه‌های زنده باتری...",
+    themeModeTitle = "حالت تاریک / روشن دستی",
+    themeModeSubtitleDark = "تم تاریک اوبسیدین فعال است (مستقل از تنظیمات سیستم)",
+    themeModeSubtitleLight = "تم روشن با کنتراست بالا فعال است (مستقل از سیستم)",
+    replayOnboardingLabel = "مشاهده مجدد راهنمای انیمیشنی",
+    replayOnboardingSubtitle = "مرور سریع قابلیت‌های سیم‌لینک در ۴ مرحله",
+    onboardingSkip = "رد کردن",
+    onboardingNext = "بعدی",
+    onboardingBack = "قبلی",
+    onboardingGetStarted = "شروع کار با سیم‌لینک",
+    onboardingBadge1 = "قدم ۱ از ۴ • ارتباط رمزنگاری‌شده",
+    onboardingTitle1 = "دو گوشی اندرویدی، یک پل امن",
+    onboardingDesc1 = "گوشی سیم‌کارت‌دار را «میزبان» و گوشی دوم را «کنترلر» کنید؛ تمام داده‌ها مستقیم و با رمزنگاری AES-256-GCM بدون هیچ سرور میانی منتقل می‌شوند.",
+    onboardingBadge2 = "قدم ۲ از ۴ • اتصال فوری محلی",
+    onboardingTitle2 = "جفت‌سازی در یک ثانیه با کد QR",
+    onboardingDesc2 = "کد QR نمایش‌داده‌شده روی گوشی میزبان را اسکن کنید تا از طریق وای‌فای محلی، هات‌اسپات یا بلوتوث به هم متصل شوند.",
+    onboardingBadge3 = "قدم ۳ از ۴ • اپ‌های پیش‌فرض گوشی",
+    onboardingTitle3 = "آنتن زنده و تماس از اپ‌های خود گوشی",
+    onboardingDesc3 = "آنتن زنده دو سیم‌کارت و باتری میزبان در نوار بالای گوشی نمایش داده می‌شود؛ تماس و پیامک مستقیم از اپ تلفن و پیامک خود گوشی انجام می‌گیرد.",
+    onboardingBadge4 = "قدم ۴ از ۴ • نمودار باتری و حریم خصوصی",
+    onboardingTitle4 = "پایش زنده باتری و امنیت کامل",
+    onboardingDesc4 = "روند مصرف و شارژ باتری گوشی متصل را روی نمودار زنده ببینید و کدهای تایید (OTP) را با یک لمس کپی کنید."
 )
 
 val EnglishStrings = AppStrings(
@@ -498,7 +541,7 @@ val EnglishStrings = AppStrings(
     languageLabel = "App Language",
     persianLabel = "فارسی (RTL)",
     englishLabel = "English (LTR)",
-    darkThemeLabel = "Modern Dark Theme (Obsidian)",
+    darkThemeLabel = "Dark Mode (Overrides System Settings)",
     deviceNameLabel = "Device Display Name",
     defaultSimLabel = "Default SIM Slot",
     autoReconnectLabel = "Auto-Reconnect on Launch",
@@ -548,7 +591,28 @@ val EnglishStrings = AppStrings(
     batteryChangeLabel = "Trend",
     batterySamplesLabel = "Points",
     batteryEmptyCompanion = "Connect to your Host phone to visualize its live historical battery usage and charging trends here.",
-    batteryCollectingHint = "Collecting live battery readings..."
+    batteryCollectingHint = "Collecting live battery readings...",
+    themeModeTitle = "Force Dark / Light Mode",
+    themeModeSubtitleDark = "Dark Obsidian theme forced (ignores system theme)",
+    themeModeSubtitleLight = "High-contrast Light theme forced (ignores system theme)",
+    replayOnboardingLabel = "Replay Animated Intro Guide",
+    replayOnboardingSubtitle = "Review SimLink's 4-step interactive walkthrough",
+    onboardingSkip = "Skip",
+    onboardingNext = "Next",
+    onboardingBack = "Back",
+    onboardingGetStarted = "Get Started with SimLink",
+    onboardingBadge1 = "Step 1 of 4 • Encrypted P2P Link",
+    onboardingTitle1 = "Two Android Phones, One Secure Bridge",
+    onboardingDesc1 = "Set your SIM-holding phone as Host and your second phone as Companion. Everything streams directly over AES-256-GCM with zero cloud servers.",
+    onboardingBadge2 = "Step 2 of 4 • Instant Local Pairing",
+    onboardingTitle2 = "Pair in One Second with QR Code",
+    onboardingDesc2 = "Scan the Host QR code to establish an instant encrypted bridge over local Wi-Fi, Hotspot, or Bluetooth.",
+    onboardingBadge3 = "Step 3 of 4 • Native Phone & SMS",
+    onboardingTitle3 = "Live Signal Bars & Default System Apps",
+    onboardingDesc3 = "See live Dual-SIM signal bars and battery in your status bar while calling and texting straight from your phone's default Phone & Messages apps.",
+    onboardingBadge4 = "Step 4 of 4 • Battery Trends & Privacy",
+    onboardingTitle4 = "Live Battery Charts & Total Privacy",
+    onboardingDesc4 = "Track historical battery usage trends for your connected device and copy incoming verification codes (OTP) with a single tap."
 )
 
 fun stringsForLanguage(code: String): AppStrings =

@@ -45,18 +45,20 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import com.example.ui.theme.ConnectedEmerald
 import com.example.ui.theme.LocalIsDarkTheme
-import com.example.ui.theme.SignalCyan
 
 /**
- * Full-bleed atmospheric obsidian nebula canvas drawn smoothly behind all screens.
+ * Full-bleed atmospheric canvas drawn smoothly behind all screens, adapting to Light & Dark themes
+ * and mirroring radial accents for RTL layouts.
  */
 @Composable
 fun AtmosphericCanvasBox(
@@ -64,63 +66,59 @@ fun AtmosphericCanvasBox(
     content: @Composable BoxScope.() -> Unit
 ) {
     val isDark = LocalIsDarkTheme.current
+    val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val baseBg = MaterialTheme.colorScheme.background
+    val primaryGlow = MaterialTheme.colorScheme.primary
+    val tertiaryGlow = MaterialTheme.colorScheme.tertiary
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(baseBg)
             .drawBehind {
-                if (isDark) {
-                    drawCircle(
-                        brush = Brush.radialGradient(
-                            colors = listOf(
-                                SignalCyan.copy(alpha = 0.11f),
-                                Color.Transparent
-                            ),
-                            center = Offset(size.width * 0.18f, size.height * 0.06f),
-                            radius = size.maxDimension * 0.58f
-                        )
+                val primaryAlpha = if (isDark) 0.11f else 0.09f
+                val tertiaryAlpha = if (isDark) 0.08f else 0.07f
+                val startGlowX = if (isRtl) size.width * 0.82f else size.width * 0.18f
+                val endGlowX = if (isRtl) size.width * 0.12f else size.width * 0.88f
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            primaryGlow.copy(alpha = primaryAlpha),
+                            Color.Transparent
+                        ),
+                        center = Offset(startGlowX, size.height * 0.06f),
+                        radius = size.maxDimension * 0.58f
                     )
-                    drawCircle(
-                        brush = Brush.radialGradient(
-                            colors = listOf(
-                                ConnectedEmerald.copy(alpha = 0.08f),
-                                Color.Transparent
-                            ),
-                            center = Offset(size.width * 0.88f, size.height * 0.24f),
-                            radius = size.maxDimension * 0.50f
-                        )
+                )
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            tertiaryGlow.copy(alpha = tertiaryAlpha),
+                            Color.Transparent
+                        ),
+                        center = Offset(endGlowX, size.height * 0.24f),
+                        radius = size.maxDimension * 0.50f
                     )
-                } else {
-                    drawCircle(
-                        brush = Brush.radialGradient(
-                            colors = listOf(
-                                SignalCyan.copy(alpha = 0.09f),
-                                Color.Transparent
-                            ),
-                            center = Offset(size.width * 0.2f, size.height * 0.05f),
-                            radius = size.maxDimension * 0.52f
-                        )
-                    )
-                }
+                )
             },
         content = content
     )
 }
 
 /**
- * Layered Obsidian Glass card with specular gradient hairline border and optional tactile press bounce.
+ * Layered Material 3 card with specular gradient hairline border, crisp light-mode elevation,
+ * and optional tactile press bounce.
  */
 @Composable
 fun GlassBridgeCard(
     modifier: Modifier = Modifier,
-    accentColor: Color = SignalCyan,
+    accentColor: Color = MaterialTheme.colorScheme.primary,
     accentStrength: Float = 0.28f,
     cornerRadius: Dp = 22.dp,
     onClick: (() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
     val isDark = LocalIsDarkTheme.current
+    val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val haptic = LocalHapticFeedback.current
     val shape: Shape = RoundedCornerShape(cornerRadius)
     val interactionSource = remember { MutableInteractionSource() }
@@ -131,28 +129,22 @@ fun GlassBridgeCard(
         label = "glassCardScale"
     )
 
-    val borderBrush = if (isDark) {
-        Brush.linearGradient(
-            colors = listOf(
-                Color.White.copy(alpha = 0.16f),
-                accentColor.copy(alpha = accentStrength),
-                Color.White.copy(alpha = 0.04f)
-            )
+    val borderColors = if (isDark) {
+        listOf(
+            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f),
+            accentColor.copy(alpha = accentStrength),
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)
         )
     } else {
-        Brush.linearGradient(
-            colors = listOf(
-                accentColor.copy(alpha = accentStrength * 0.9f),
-                MaterialTheme.colorScheme.outline.copy(alpha = 0.6f)
-            )
+        listOf(
+            accentColor.copy(alpha = (accentStrength * 0.95f).coerceIn(0.22f, 0.65f)),
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.85f),
+            accentColor.copy(alpha = (accentStrength * 0.55f).coerceIn(0.16f, 0.45f))
         )
     }
-
-    val containerBg = if (isDark) {
-        MaterialTheme.colorScheme.surface.copy(alpha = 0.92f)
-    } else {
-        MaterialTheme.colorScheme.surface
-    }
+    val borderBrush = Brush.linearGradient(
+        colors = if (isRtl) borderColors.reversed() else borderColors
+    )
 
     Surface(
         modifier = modifier
@@ -173,16 +165,17 @@ fun GlassBridgeCard(
                 }
             ),
         shape = shape,
-        color = containerBg,
+        color = if (isDark) MaterialTheme.colorScheme.surface.copy(alpha = 0.94f) else MaterialTheme.colorScheme.surface,
         border = BorderStroke(1.dp, borderBrush),
-        tonalElevation = if (isDark) 2.dp else 1.dp
+        tonalElevation = if (isDark) 2.dp else 0.dp,
+        shadowElevation = if (isDark) 0.dp else 3.dp
     ) {
         Box(content = content)
     }
 }
 
 /**
- * Generated studio artwork banner with clean obsidian gradient scrim for crisp foreground legibility.
+ * Generated studio artwork banner with adaptive Light/Dark surface fade for WCAG-compliant text legibility.
  */
 @Composable
 fun HeroArtworkBanner(
@@ -192,6 +185,8 @@ fun HeroArtworkBanner(
     modifier: Modifier = Modifier,
     overlayContent: @Composable BoxScope.() -> Unit = {}
 ) {
+    val isDark = LocalIsDarkTheme.current
+    val scrimBase = MaterialTheme.colorScheme.scrim
     val bgFade = MaterialTheme.colorScheme.surface
     Box(
         modifier = modifier
@@ -209,13 +204,24 @@ fun HeroArtworkBanner(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color.Black.copy(alpha = 0.12f),
-                            Color.Black.copy(alpha = 0.45f),
-                            bgFade.copy(alpha = 0.94f)
+                    if (isDark) {
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                scrimBase.copy(alpha = 0.16f),
+                                scrimBase.copy(alpha = 0.50f),
+                                bgFade.copy(alpha = 0.96f)
+                            )
                         )
-                    )
+                    } else {
+                        Brush.verticalGradient(
+                            colorStops = arrayOf(
+                                0.0f to scrimBase.copy(alpha = 0.10f),
+                                0.36f to bgFade.copy(alpha = 0.62f),
+                                0.72f to bgFade.copy(alpha = 0.94f),
+                                1.0f to bgFade.copy(alpha = 0.99f)
+                            )
+                        )
+                    }
                 )
         )
         overlayContent()
@@ -255,19 +261,31 @@ fun FloatingGlassNavBar(
                 .shadow(
                     elevation = if (isDark) 18.dp else 10.dp,
                     shape = RoundedCornerShape(28.dp),
-                    ambientColor = SignalCyan.copy(alpha = 0.18f),
-                    spotColor = Color.Black.copy(alpha = 0.5f)
+                    ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = if (isDark) 0.18f else 0.12f),
+                    spotColor = MaterialTheme.colorScheme.scrim.copy(alpha = if (isDark) 0.65f else 0.22f)
                 ),
             shape = RoundedCornerShape(28.dp),
-            color = if (isDark) Color(0xEB0E1624) else Color(0xF5FFFFFF),
+            color = if (isDark) {
+                MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.95f)
+            } else {
+                MaterialTheme.colorScheme.surface.copy(alpha = 0.97f)
+            },
             border = BorderStroke(
                 width = 1.dp,
                 brush = Brush.linearGradient(
-                    colors = listOf(
-                        Color.White.copy(alpha = if (isDark) 0.18f else 0.7f),
-                        SignalCyan.copy(alpha = 0.30f),
-                        Color.White.copy(alpha = 0.05f)
-                    )
+                    colors = if (isDark) {
+                        listOf(
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.16f),
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.30f),
+                            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                        )
+                    } else {
+                        listOf(
+                            MaterialTheme.colorScheme.outlineVariant,
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.32f),
+                            MaterialTheme.colorScheme.outlineVariant
+                        )
+                    }
                 )
             )
         ) {
@@ -326,6 +344,7 @@ fun FloatingGlassNavBar(
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
                             color = contentTint,
+                            textAlign = TextAlign.Center,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )

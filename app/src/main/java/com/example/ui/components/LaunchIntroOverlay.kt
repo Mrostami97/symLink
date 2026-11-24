@@ -67,9 +67,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.R
 import com.example.ui.i18n.LocalAppStrings
-import com.example.ui.theme.ConnectedEmerald
-import com.example.ui.theme.ObsidianBackground
-import com.example.ui.theme.SignalCyan
+import com.example.ui.theme.LocalIsDarkTheme
 import kotlinx.coroutines.delay
 
 @Composable
@@ -124,10 +122,14 @@ fun LaunchIntroOverlay(
         exit = fadeOut(tween(420)) + scaleOut(targetScale = 1.04f, animationSpec = tween(420)),
         modifier = modifier
     ) {
+        val isDark = LocalIsDarkTheme.current
+        val bgColor = MaterialTheme.colorScheme.background
+        val primaryAccent = MaterialTheme.colorScheme.primary
+        val emeraldAccent = MaterialTheme.colorScheme.tertiary
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(ObsidianBackground)
+                .background(bgColor)
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
@@ -142,7 +144,7 @@ fun LaunchIntroOverlay(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxSize()
-                    .alpha(0.28f)
+                    .alpha(if (isDark) 0.28f else 0.12f)
             )
             Box(
                 modifier = Modifier
@@ -150,9 +152,9 @@ fun LaunchIntroOverlay(
                     .background(
                         Brush.verticalGradient(
                             colors = listOf(
-                                ObsidianBackground.copy(alpha = 0.65f),
-                                ObsidianBackground.copy(alpha = 0.85f),
-                                ObsidianBackground.copy(alpha = 0.96f)
+                                bgColor.copy(alpha = if (isDark) 0.65f else 0.78f),
+                                bgColor.copy(alpha = if (isDark) 0.85f else 0.90f),
+                                bgColor.copy(alpha = 0.97f)
                             )
                         )
                     )
@@ -172,8 +174,8 @@ fun LaunchIntroOverlay(
                 // Top security pill
                 Surface(
                     shape = RoundedCornerShape(50),
-                    color = SignalCyan.copy(alpha = 0.12f),
-                    border = BorderStroke(1.dp, SignalCyan.copy(alpha = 0.35f))
+                    color = primaryAccent.copy(alpha = 0.12f),
+                    border = BorderStroke(1.dp, primaryAccent.copy(alpha = 0.35f))
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
@@ -183,13 +185,13 @@ fun LaunchIntroOverlay(
                         Icon(
                             imageVector = Icons.Filled.VerifiedUser,
                             contentDescription = null,
-                            tint = SignalCyan,
+                            tint = primaryAccent,
                             modifier = Modifier.size(15.dp)
                         )
                         Text(
                             text = "AES-256-GCM P2P",
                             style = MaterialTheme.typography.labelSmall,
-                            color = SignalCyan,
+                            color = primaryAccent,
                             fontWeight = FontWeight.SemiBold
                         )
                     }
@@ -210,7 +212,7 @@ fun LaunchIntroOverlay(
                             val center = Offset(size.width / 2f, size.height / 2f)
                             val maxR = size.minDimension / 2f
                             drawCircle(
-                                color = SignalCyan.copy(alpha = (1f - pulse) * 0.45f),
+                                color = primaryAccent.copy(alpha = (1f - pulse) * 0.45f),
                                 radius = maxR * (0.62f + 0.38f * pulse),
                                 center = center,
                                 style = Stroke(width = 3f)
@@ -218,8 +220,8 @@ fun LaunchIntroOverlay(
                             drawCircle(
                                 brush = Brush.radialGradient(
                                     colors = listOf(
-                                        SignalCyan.copy(alpha = 0.28f),
-                                        ConnectedEmerald.copy(alpha = 0.10f),
+                                        primaryAccent.copy(alpha = 0.25f),
+                                        emeraldAccent.copy(alpha = 0.10f),
                                         Color.Transparent
                                     ),
                                     center = center,
@@ -232,12 +234,12 @@ fun LaunchIntroOverlay(
                         Surface(
                             modifier = Modifier.size(92.dp),
                             shape = RoundedCornerShape(28.dp),
-                            color = Color(0xFF0B1220),
+                            color = MaterialTheme.colorScheme.surfaceContainerLow,
                             border = BorderStroke(
                                 1.5.dp,
-                                Brush.linearGradient(listOf(SignalCyan, ConnectedEmerald))
+                                Brush.linearGradient(listOf(primaryAccent, emeraldAccent))
                             ),
-                            shadowElevation = 18.dp
+                            shadowElevation = 14.dp
                         ) {
                             Image(
                                 painter = painterResource(id = R.drawable.itell_icon_fg_1795555028207),
@@ -257,13 +259,13 @@ fun LaunchIntroOverlay(
                         Text(
                             text = strings.appTitle,
                             style = MaterialTheme.typography.displaySmall,
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onBackground,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
                             text = strings.appTagline,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color(0xFF94A3B8),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
                         )
                     }
@@ -271,16 +273,17 @@ fun LaunchIntroOverlay(
                     // Prominent Creator Credit Glass Card
                     Surface(
                         shape = RoundedCornerShape(20.dp),
-                        color = Color(0xCC0E1729),
+                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f),
                         border = BorderStroke(
                             1.2.dp,
                             Brush.horizontalGradient(
                                 colors = listOf(
-                                    SignalCyan.copy(alpha = 0.65f),
-                                    ConnectedEmerald.copy(alpha = 0.65f)
+                                    primaryAccent.copy(alpha = 0.60f),
+                                    emeraldAccent.copy(alpha = 0.60f)
                                 )
                             )
                         ),
+                        shadowElevation = if (isDark) 0.dp else 4.dp,
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("launch_creator_credit")
@@ -299,8 +302,8 @@ fun LaunchIntroOverlay(
                                     .background(
                                         Brush.linearGradient(
                                             listOf(
-                                                SignalCyan.copy(alpha = 0.25f),
-                                                ConnectedEmerald.copy(alpha = 0.25f)
+                                                primaryAccent.copy(alpha = 0.20f),
+                                                emeraldAccent.copy(alpha = 0.20f)
                                             )
                                         )
                                     ),
@@ -309,7 +312,7 @@ fun LaunchIntroOverlay(
                                 Icon(
                                     imageVector = Icons.Filled.AutoAwesome,
                                     contentDescription = null,
-                                    tint = SignalCyan,
+                                    tint = primaryAccent,
                                     modifier = Modifier.size(18.dp)
                                 )
                             }
@@ -317,7 +320,7 @@ fun LaunchIntroOverlay(
                             Text(
                                 text = strings.creatorCredit,
                                 style = MaterialTheme.typography.titleMedium,
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 fontWeight = FontWeight.Bold,
                                 textAlign = TextAlign.Center
                             )
@@ -337,8 +340,8 @@ fun LaunchIntroOverlay(
                             .fillMaxWidth()
                             .height(4.dp)
                             .clip(RoundedCornerShape(50)),
-                        color = SignalCyan,
-                        trackColor = Color.White.copy(alpha = 0.12f),
+                        color = primaryAccent,
+                        trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.14f),
                         strokeCap = StrokeCap.Round
                     )
                 }

@@ -57,6 +57,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -75,10 +76,12 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
@@ -90,11 +93,8 @@ import com.example.bridge.TransportMode
 import com.example.bridge.VoiceTunnelState
 import com.example.ui.i18n.LocalAppStrings
 import com.example.ui.i18n.localizeDigits
-import com.example.ui.theme.AlertCrimson
-import com.example.ui.theme.ConnectedEmerald
+import com.example.ui.theme.LocalIsDarkTheme
 import com.example.ui.theme.MonoTechnicalStyle
-import com.example.ui.theme.SignalCyan
-import com.example.ui.theme.Sim2Amber
 import kotlinx.coroutines.delay
 
 @Composable
@@ -107,6 +107,10 @@ fun SignalCoreHeroCard(
     modifier: Modifier = Modifier
 ) {
     val strings = LocalAppStrings.current
+    val isDark = LocalIsDarkTheme.current
+    val primaryAccent = MaterialTheme.colorScheme.primary
+    val emeraldAccent = MaterialTheme.colorScheme.tertiary
+    val errorAccent = MaterialTheme.colorScheme.error
     val isConnected = connectionState is ConnectionState.Connected
     val isActivePulse = connectionState is ConnectionState.Hosting ||
         connectionState is ConnectionState.Discovering ||
@@ -114,12 +118,12 @@ fun SignalCoreHeroCard(
         isConnected
 
     val targetAccent = when (connectionState) {
-        is ConnectionState.Connected -> ConnectedEmerald
+        is ConnectionState.Connected -> emeraldAccent
         is ConnectionState.Hosting,
         is ConnectionState.Discovering,
-        is ConnectionState.Connecting -> SignalCyan
-        is ConnectionState.Error -> AlertCrimson
-        else -> MaterialTheme.colorScheme.primary
+        is ConnectionState.Connecting -> primaryAccent
+        is ConnectionState.Error -> errorAccent
+        else -> primaryAccent
     }
     val accentColor by animateColorAsState(
         targetValue = targetAccent,
@@ -172,7 +176,7 @@ fun SignalCoreHeroCard(
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .matchParentSize()
-                .alpha(0.24f)
+                .alpha(if (isDark) 0.24f else 0.08f)
         )
         Box(
             modifier = Modifier
@@ -180,7 +184,7 @@ fun SignalCoreHeroCard(
                 .background(
                     Brush.radialGradient(
                         colors = listOf(
-                            accentColor.copy(alpha = 0.20f),
+                            accentColor.copy(alpha = if (isDark) 0.20f else 0.11f),
                             Color.Transparent
                         ),
                         center = Offset(380f, 120f),
@@ -229,18 +233,20 @@ fun SignalCoreHeroCard(
                     if (connectionState is ConnectionState.Connected) {
                         Surface(
                             shape = RoundedCornerShape(50),
-                            color = ConnectedEmerald.copy(alpha = 0.16f),
-                            border = BorderStroke(1.dp, ConnectedEmerald.copy(alpha = 0.45f))
+                            color = emeraldAccent.copy(alpha = 0.16f),
+                            border = BorderStroke(1.dp, emeraldAccent.copy(alpha = 0.45f))
                         ) {
-                            Text(
-                                text = buildString {
-                                    append(if (connectionState.transport == TransportMode.WIFI_TCP) "Wi-Fi" else "BT")
-                                    if (latencyMs > 0) append(" • ${latencyMs}ms")
-                                }.localizeDigits(strings.isPersian),
-                                style = MonoTechnicalStyle,
-                                color = ConnectedEmerald,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
-                            )
+                            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                                Text(
+                                    text = buildString {
+                                        append(if (connectionState.transport == TransportMode.WIFI_TCP) "Wi-Fi" else "BT")
+                                        if (latencyMs > 0) append(" • ${latencyMs}ms")
+                                    }.localizeDigits(strings.isPersian),
+                                    style = MonoTechnicalStyle,
+                                    color = emeraldAccent,
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                                )
+                            }
                         }
                     }
                 }
@@ -251,7 +257,10 @@ fun SignalCoreHeroCard(
                         .fillMaxWidth()
                         .height(86.dp)
                         .clip(RoundedCornerShape(18.dp))
-                        .background(MaterialTheme.colorScheme.background.copy(alpha = 0.55f))
+                        .background(
+                            if (isDark) MaterialTheme.colorScheme.background.copy(alpha = 0.55f)
+                            else MaterialTheme.colorScheme.surfaceContainerLow
+                        )
                         .padding(horizontal = 18.dp),
                     contentAlignment = Alignment.Center
                 ) {
@@ -270,8 +279,8 @@ fun SignalCoreHeroCard(
                             path = arcPath,
                             brush = Brush.horizontalGradient(
                                 colors = listOf(
-                                    SignalCyan.copy(alpha = if (isConnected) 0.85f else 0.28f),
-                                    ConnectedEmerald.copy(alpha = if (isConnected) 0.9f else 0.25f)
+                                    primaryAccent.copy(alpha = if (isConnected) 0.85f else 0.35f),
+                                    emeraldAccent.copy(alpha = if (isConnected) 0.9f else 0.30f)
                                 )
                             ),
                             style = Stroke(width = if (isConnected) 5f else 3f, cap = StrokeCap.Round)
@@ -289,7 +298,7 @@ fun SignalCoreHeroCard(
                                     center = Offset(px, py)
                                 )
                                 drawCircle(
-                                    color = Color.White,
+                                    color = if (isDark) Color.White else accentColor,
                                     radius = 5.5f,
                                     center = Offset(px, py)
                                 )
@@ -310,7 +319,7 @@ fun SignalCoreHeroCard(
                             )
                             if (isConnected) {
                                 drawCircle(
-                                    color = ConnectedEmerald.copy(alpha = a),
+                                    color = emeraldAccent.copy(alpha = a),
                                     radius = r,
                                     center = peerCenter,
                                     style = Stroke(width = 2.5f)
@@ -325,7 +334,7 @@ fun SignalCoreHeroCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         NodeDeviceBadge(
-                            accent = SignalCyan,
+                            accent = primaryAccent,
                             active = true
                         )
                         Surface(
@@ -341,7 +350,7 @@ fun SignalCoreHeroCard(
                             )
                         }
                         NodeDeviceBadge(
-                            accent = if (isConnected) ConnectedEmerald else MaterialTheme.colorScheme.onSurfaceVariant,
+                            accent = if (isConnected) emeraldAccent else MaterialTheme.colorScheme.onSurfaceVariant,
                             active = isConnected
                         )
                     }
@@ -358,13 +367,15 @@ fun SignalCoreHeroCard(
                     )
                     when (connectionState) {
                         is ConnectionState.Connected -> {
-                            Text(
-                                text = "${connectionState.peerName} • ${connectionState.endpointLabel}",
-                                style = MonoTechnicalStyle,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
+                            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                                Text(
+                                    text = "${connectionState.peerName} • ${connectionState.endpointLabel}",
+                                    style = MonoTechnicalStyle,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(5.dp)
@@ -372,22 +383,31 @@ fun SignalCoreHeroCard(
                                 Icon(
                                     imageVector = Icons.Filled.Security,
                                     contentDescription = null,
-                                    tint = ConnectedEmerald,
+                                    tint = emeraldAccent,
                                     modifier = Modifier.size(14.dp)
                                 )
                                 Text(
-                                    text = "${strings.securityFingerprint}: ${connectionState.fingerprint}",
-                                    style = MonoTechnicalStyle,
-                                    color = ConnectedEmerald
+                                    text = "${strings.securityFingerprint}:",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = emeraldAccent
                                 )
+                                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                                    Text(
+                                        text = connectionState.fingerprint,
+                                        style = MonoTechnicalStyle,
+                                        color = emeraldAccent
+                                    )
+                                }
                             }
                         }
                         is ConnectionState.Hosting -> {
-                            Text(
-                                text = "${connectionState.hostIp}:${connectionState.port}",
-                                style = MonoTechnicalStyle,
-                                color = SignalCyan
-                            )
+                            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                                Text(
+                                    text = "${connectionState.hostIp}:${connectionState.port}",
+                                    style = MonoTechnicalStyle,
+                                    color = primaryAccent
+                                )
+                            }
                             Text(
                                 text = strings.encryptedTunnel,
                                 style = MaterialTheme.typography.bodySmall,
@@ -424,8 +444,8 @@ fun SignalCoreHeroCard(
                         shape = RoundedCornerShape(16.dp),
                         colors = if (isConnected || connectionState is ConnectionState.Hosting) {
                             ButtonDefaults.buttonColors(
-                                containerColor = AlertCrimson.copy(alpha = 0.18f),
-                                contentColor = AlertCrimson
+                                containerColor = errorAccent.copy(alpha = 0.16f),
+                                contentColor = errorAccent
                             )
                         } else {
                             ButtonDefaults.buttonColors(
@@ -485,7 +505,7 @@ fun SimCardTile(
     modifier: Modifier = Modifier
 ) {
     val strings = LocalAppStrings.current
-    val simAccent = if (sim.slotIndex == 1) SignalCyan else Sim2Amber
+    val simAccent = if (sim.slotIndex == 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
 
     GlassBridgeCard(
         modifier = modifier.testTag("sim_card_slot_${sim.slotIndex}"),
@@ -564,34 +584,36 @@ fun SimCardTile(
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f)
                     )
-                    // Real 4-bar hardware signal indicator + numeric level
+                    // Real 4-bar hardware signal indicator + numeric level (always LTR ascending)
                     val level = sim.signalLevel.coerceIn(0, 4)
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(5.dp),
-                        verticalAlignment = Alignment.Bottom
-                    ) {
+                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                         Row(
-                            horizontalArrangement = Arrangement.spacedBy(2.dp),
+                            horizontalArrangement = Arrangement.spacedBy(5.dp),
                             verticalAlignment = Alignment.Bottom
                         ) {
-                            listOf(5.dp, 8.dp, 11.dp, 14.dp).forEachIndexed { idx, h ->
-                                val barLit = idx < level
-                                Box(
-                                    modifier = Modifier
-                                        .width(3.dp)
-                                        .height(h)
-                                        .clip(RoundedCornerShape(2.dp))
-                                        .background(
-                                            if (barLit) simAccent else simAccent.copy(alpha = 0.22f)
-                                        )
-                                )
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(2.dp),
+                                verticalAlignment = Alignment.Bottom
+                            ) {
+                                listOf(5.dp, 8.dp, 11.dp, 14.dp).forEachIndexed { idx, h ->
+                                    val barLit = idx < level
+                                    Box(
+                                        modifier = Modifier
+                                            .width(3.dp)
+                                            .height(h)
+                                            .clip(RoundedCornerShape(2.dp))
+                                            .background(
+                                                if (barLit) simAccent else simAccent.copy(alpha = 0.22f)
+                                            )
+                                    )
+                                }
                             }
+                            Text(
+                                text = "$level/4".localizeDigits(strings.isPersian),
+                                style = MonoTechnicalStyle.copy(fontSize = 11.sp),
+                                color = if (level > 0) simAccent else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
-                        Text(
-                            text = "$level/4".localizeDigits(strings.isPersian),
-                            style = MonoTechnicalStyle.copy(fontSize = 11.sp),
-                            color = if (level > 0) simAccent else MaterialTheme.colorScheme.onSurfaceVariant
-                        )
                     }
                 }
             }
@@ -607,6 +629,7 @@ fun IncomingCallOverlay(
     modifier: Modifier = Modifier
 ) {
     val strings = LocalAppStrings.current
+    val emeraldAccent = MaterialTheme.colorScheme.tertiary
     AnimatedVisibility(
         visible = banner.isActive,
         enter = slideInVertically { -it } + fadeIn(),
@@ -617,7 +640,7 @@ fun IncomingCallOverlay(
             modifier = Modifier
                 .fillMaxWidth()
                 .testTag("incoming_call_overlay"),
-            accentColor = ConnectedEmerald,
+            accentColor = emeraldAccent,
             accentStrength = 0.8f,
             cornerRadius = 22.dp
         ) {
@@ -627,7 +650,7 @@ fun IncomingCallOverlay(
                     .background(
                         Brush.horizontalGradient(
                             colors = listOf(
-                                ConnectedEmerald.copy(alpha = 0.22f),
+                                emeraldAccent.copy(alpha = 0.22f),
                                 Color.Transparent
                             )
                         )
@@ -643,13 +666,13 @@ fun IncomingCallOverlay(
                             modifier = Modifier
                                 .size(48.dp)
                                 .clip(CircleShape)
-                                .background(ConnectedEmerald.copy(alpha = 0.22f)),
+                                .background(emeraldAccent.copy(alpha = 0.22f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.PhoneInTalk,
                                 contentDescription = null,
-                                tint = ConnectedEmerald,
+                                tint = emeraldAccent,
                                 modifier = Modifier.size(24.dp)
                             )
                         }
@@ -657,7 +680,7 @@ fun IncomingCallOverlay(
                             Text(
                                 text = if (banner.isRinging) strings.incomingCallOnHost else strings.hostCallActive,
                                 style = MaterialTheme.typography.titleMedium,
-                                color = ConnectedEmerald,
+                                color = emeraldAccent,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
@@ -678,8 +701,8 @@ fun IncomingCallOverlay(
                                 .height(48.dp)
                                 .testTag("incoming_open_voice_button"),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = ConnectedEmerald,
-                                contentColor = Color(0xFF00281B)
+                                containerColor = emeraldAccent,
+                                contentColor = MaterialTheme.colorScheme.onTertiary
                             ),
                             shape = RoundedCornerShape(14.dp)
                         ) {
@@ -710,6 +733,10 @@ fun VoiceTunnelActiveBar(
     modifier: Modifier = Modifier
 ) {
     val strings = LocalAppStrings.current
+    val primaryAccent = MaterialTheme.colorScheme.primary
+    val emeraldAccent = MaterialTheme.colorScheme.tertiary
+    val amberAccent = MaterialTheme.colorScheme.secondary
+    val errorAccent = MaterialTheme.colorScheme.error
     AnimatedVisibility(
         visible = voiceState.isActive,
         enter = fadeIn() + slideInVertically { -it / 2 },
@@ -720,7 +747,7 @@ fun VoiceTunnelActiveBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .testTag("voice_tunnel_active_bar"),
-            accentColor = SignalCyan,
+            accentColor = primaryAccent,
             accentStrength = 0.72f,
             cornerRadius = 22.dp
         ) {
@@ -729,7 +756,7 @@ fun VoiceTunnelActiveBar(
                     .fillMaxWidth()
                     .background(
                         Brush.verticalGradient(
-                            colors = listOf(SignalCyan.copy(alpha = 0.16f), Color.Transparent)
+                            colors = listOf(primaryAccent.copy(alpha = 0.16f), Color.Transparent)
                         )
                     )
                     .padding(16.dp)
@@ -744,25 +771,27 @@ fun VoiceTunnelActiveBar(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Icon(Icons.Filled.GraphicEq, contentDescription = null, tint = SignalCyan)
+                            Icon(Icons.Filled.GraphicEq, contentDescription = null, tint = primaryAccent)
                             Text(
                                 text = strings.voiceTunnelActive,
                                 style = MaterialTheme.typography.titleSmall,
-                                color = SignalCyan
+                                color = primaryAccent
                             )
                         }
                         val mins = voiceState.durationSeconds / 60
                         val secs = voiceState.durationSeconds % 60
                         Surface(
                             shape = RoundedCornerShape(8.dp),
-                            color = SignalCyan.copy(alpha = 0.14f)
+                            color = primaryAccent.copy(alpha = 0.14f)
                         ) {
-                            Text(
-                                text = "%02d:%02d".format(mins, secs).localizeDigits(strings.isPersian),
-                                style = MonoTechnicalStyle,
-                                color = SignalCyan,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                            )
+                            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                                Text(
+                                    text = "%02d:%02d".format(mins, secs).localizeDigits(strings.isPersian),
+                                    style = MonoTechnicalStyle,
+                                    color = primaryAccent,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                )
+                            }
                         }
                     }
 
@@ -784,7 +813,7 @@ fun VoiceTunnelActiveBar(
                                     .height(barHeight)
                                     .clip(RoundedCornerShape(50))
                                     .background(
-                                        Brush.verticalGradient(listOf(SignalCyan, ConnectedEmerald))
+                                        Brush.verticalGradient(listOf(primaryAccent, emeraldAccent))
                                     )
                             )
                         }
@@ -801,14 +830,14 @@ fun VoiceTunnelActiveBar(
                                 .size(50.dp)
                                 .testTag("voice_mute_button"),
                             colors = IconButtonDefaults.filledTonalIconButtonColors(
-                                containerColor = if (voiceState.isMuted) Sim2Amber.copy(alpha = 0.25f)
+                                containerColor = if (voiceState.isMuted) amberAccent.copy(alpha = 0.25f)
                                 else MaterialTheme.colorScheme.surfaceContainerHigh
                             )
                         ) {
                             Icon(
                                 imageVector = if (voiceState.isMuted) Icons.Filled.MicOff else Icons.Filled.Mic,
                                 contentDescription = if (voiceState.isMuted) strings.unmute else strings.mute,
-                                tint = if (voiceState.isMuted) Sim2Amber else MaterialTheme.colorScheme.onSurface
+                                tint = if (voiceState.isMuted) amberAccent else MaterialTheme.colorScheme.onSurface
                             )
                         }
 
@@ -818,14 +847,14 @@ fun VoiceTunnelActiveBar(
                                 .size(50.dp)
                                 .testTag("voice_speaker_button"),
                             colors = IconButtonDefaults.filledTonalIconButtonColors(
-                                containerColor = if (voiceState.isSpeakerOn) SignalCyan.copy(alpha = 0.24f)
+                                containerColor = if (voiceState.isSpeakerOn) primaryAccent.copy(alpha = 0.24f)
                                 else MaterialTheme.colorScheme.surfaceContainerHigh
                             )
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.VolumeUp,
                                 contentDescription = strings.speaker,
-                                tint = if (voiceState.isSpeakerOn) SignalCyan else MaterialTheme.colorScheme.onSurface
+                                tint = if (voiceState.isSpeakerOn) primaryAccent else MaterialTheme.colorScheme.onSurface
                             )
                         }
 
@@ -835,13 +864,13 @@ fun VoiceTunnelActiveBar(
                                 .size(50.dp)
                                 .testTag("voice_hangup_button"),
                             colors = IconButtonDefaults.filledTonalIconButtonColors(
-                                containerColor = AlertCrimson
+                                containerColor = errorAccent
                             )
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.CallEnd,
                                 contentDescription = strings.stopVoiceTunnel,
-                                tint = Color.White
+                                tint = MaterialTheme.colorScheme.onError
                             )
                         }
                     }
@@ -869,7 +898,7 @@ fun OtpCodeChip(
     }
 
     val chipAccent by animateColorAsState(
-        targetValue = if (copiedRecently) ConnectedEmerald else SignalCyan,
+        targetValue = if (copiedRecently) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary,
         animationSpec = tween(220),
         label = "otpChipAccent"
     )
@@ -901,15 +930,17 @@ fun OtpCodeChip(
                     style = MaterialTheme.typography.labelSmall,
                     color = chipAccent.copy(alpha = 0.85f)
                 )
-                Text(
-                    text = otpCode.chunked(3).joinToString("  "),
-                    style = MonoTechnicalStyle.copy(
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 2.5.sp
-                    ),
-                    color = chipAccent
-                )
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                    Text(
+                        text = otpCode.chunked(3).joinToString("  "),
+                        style = MonoTechnicalStyle.copy(
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 2.5.sp
+                        ),
+                        color = chipAccent
+                    )
+                }
             }
             Surface(
                 shape = RoundedCornerShape(12.dp),

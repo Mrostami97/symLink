@@ -46,11 +46,7 @@ import com.example.bridge.DeviceRole
 import com.example.data.local.BatteryHistoryEntity
 import com.example.ui.i18n.LocalAppStrings
 import com.example.ui.i18n.localizeDigits
-import com.example.ui.theme.AlertCrimson
-import com.example.ui.theme.ConnectedEmerald
 import com.example.ui.theme.MonoTechnicalStyle
-import com.example.ui.theme.SignalCyan
-import com.example.ui.theme.Sim2Amber
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
@@ -90,14 +86,18 @@ fun BatteryHistoryChartCard(
     modifier: Modifier = Modifier
 ) {
     val strings = LocalAppStrings.current
+    val primaryAccent = MaterialTheme.colorScheme.primary
+    val emeraldAccent = MaterialTheme.colorScheme.tertiary
+    val amberAccent = MaterialTheme.colorScheme.secondary
+    val errorAccent = MaterialTheme.colorScheme.error
     val summary = remember(samples) { BatteryTrendCalculator.summarize(samples) }
 
     val lineAccent = when {
-        summary == null -> SignalCyan
-        summary.isCharging -> SignalCyan
-        summary.currentPercent <= 20 -> AlertCrimson
-        summary.currentPercent <= 40 -> Sim2Amber
-        else -> ConnectedEmerald
+        summary == null -> primaryAccent
+        summary.isCharging -> primaryAccent
+        summary.currentPercent <= 20 -> errorAccent
+        summary.currentPercent <= 40 -> amberAccent
+        else -> emeraldAccent
     }
 
     val chartPoints = remember(samples) {
@@ -304,13 +304,13 @@ fun BatteryHistoryChartCard(
                             modifier = Modifier
                                 .size(44.dp)
                                 .clip(CircleShape)
-                                .background(SignalCyan.copy(alpha = 0.14f)),
+                                .background(primaryAccent.copy(alpha = 0.14f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ShowChart,
                                 contentDescription = null,
-                                tint = SignalCyan,
+                                tint = primaryAccent,
                                 modifier = Modifier.size(22.dp)
                             )
                         }
@@ -450,9 +450,9 @@ fun BatteryHistoryChartCard(
                         BatteryTrendCalculator.formatSignedDelta(summary.deltaPercent)
                     }
                     val trendColor = when {
-                        summary.deltaPercent > 0 -> ConnectedEmerald
-                        summary.deltaPercent < 0 -> Sim2Amber
-                        else -> SignalCyan
+                        summary.deltaPercent > 0 -> emeraldAccent
+                        summary.deltaPercent < 0 -> amberAccent
+                        else -> primaryAccent
                     }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -461,13 +461,13 @@ fun BatteryHistoryChartCard(
                         BatteryStatMiniTile(
                             label = strings.batteryMinLabel,
                             value = "${summary.minPercent}%".localizeDigits(strings.isPersian),
-                            accent = Sim2Amber,
+                            accent = amberAccent,
                             modifier = Modifier.weight(1f)
                         )
                         BatteryStatMiniTile(
                             label = strings.batteryMaxLabel,
                             value = "${summary.maxPercent}%".localizeDigits(strings.isPersian),
-                            accent = ConnectedEmerald,
+                            accent = emeraldAccent,
                             modifier = Modifier.weight(1f)
                         )
                         BatteryStatMiniTile(
@@ -479,7 +479,7 @@ fun BatteryHistoryChartCard(
                         BatteryStatMiniTile(
                             label = strings.batterySamplesLabel,
                             value = summary.sampleCount.toString().localizeDigits(strings.isPersian),
-                            accent = SignalCyan,
+                            accent = primaryAccent,
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -514,14 +514,16 @@ private fun BatteryStatMiniTile(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            Text(
-                text = value,
-                style = MonoTechnicalStyle,
-                color = accent,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                Text(
+                    text = value,
+                    style = MonoTechnicalStyle,
+                    color = accent,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
     }
 }

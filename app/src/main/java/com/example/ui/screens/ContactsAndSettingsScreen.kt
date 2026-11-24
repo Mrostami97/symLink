@@ -20,12 +20,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Contacts
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.PlayCircleOutline
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Sync
@@ -39,6 +43,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -63,11 +68,10 @@ import com.example.data.preferences.UserPreferences
 import com.example.ui.components.GlassBridgeCard
 import com.example.ui.i18n.LocalAppStrings
 import com.example.ui.i18n.localizeDigits
-import com.example.ui.theme.ConnectedEmerald
 import com.example.ui.theme.ContactAvatarColors
+import com.example.ui.theme.ContactAvatarColorsLight
+import com.example.ui.theme.LocalIsDarkTheme
 import com.example.ui.theme.MonoTechnicalStyle
-import com.example.ui.theme.SignalCyan
-import com.example.ui.theme.Sim2Amber
 
 @Composable
 fun ContactsAndSettingsScreen(
@@ -84,9 +88,15 @@ fun ContactsAndSettingsScreen(
     onSetDefaultSim: (Int) -> Unit,
     onSetAutoReconnect: (Boolean) -> Unit,
     onSetVibrateIncoming: (Boolean) -> Unit,
+    onReplayOnboarding: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val strings = LocalAppStrings.current
+    val isDark = LocalIsDarkTheme.current
+    val primaryAccent = MaterialTheme.colorScheme.primary
+    val emeraldAccent = MaterialTheme.colorScheme.tertiary
+    val amberAccent = MaterialTheme.colorScheme.secondary
+    val avatarPalette = if (isDark) ContactAvatarColors else ContactAvatarColorsLight
     var selectedTab by remember { mutableIntStateOf(0) }
     var searchQuery by remember { mutableStateOf("") }
     var aliasDraft by remember(preferences.deviceAlias) { mutableStateOf(preferences.deviceAlias) }
@@ -137,7 +147,7 @@ fun ContactsAndSettingsScreen(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
                     placeholder = { Text(strings.searchContactsHint) },
-                    leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, tint = SignalCyan) },
+                    leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, tint = primaryAccent) },
                     singleLine = true,
                     shape = RoundedCornerShape(18.dp),
                     modifier = Modifier
@@ -187,11 +197,11 @@ fun ContactsAndSettingsScreen(
                             .height(50.dp)
                             .testTag("push_contacts_peer_button"),
                         shape = RoundedCornerShape(16.dp),
-                        border = BorderStroke(1.dp, SignalCyan.copy(alpha = 0.65f))
+                        border = BorderStroke(1.dp, primaryAccent.copy(alpha = 0.65f))
                     ) {
-                        Icon(Icons.Filled.CloudUpload, contentDescription = null, tint = SignalCyan)
+                        Icon(Icons.Filled.CloudUpload, contentDescription = null, tint = primaryAccent)
                         Spacer(Modifier.width(8.dp))
-                        Text(strings.pushContactsToPeer, color = SignalCyan, fontWeight = FontWeight.SemiBold)
+                        Text(strings.pushContactsToPeer, color = primaryAccent, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
@@ -200,7 +210,7 @@ fun ContactsAndSettingsScreen(
                 item {
                     GlassBridgeCard(
                         modifier = Modifier.fillMaxWidth(),
-                        accentColor = SignalCyan,
+                        accentColor = primaryAccent,
                         accentStrength = 0.25f
                     ) {
                         Column(
@@ -214,13 +224,13 @@ fun ContactsAndSettingsScreen(
                                 modifier = Modifier
                                     .size(56.dp)
                                     .clip(RoundedCornerShape(18.dp))
-                                    .background(SignalCyan.copy(alpha = 0.14f)),
+                                    .background(primaryAccent.copy(alpha = 0.14f)),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     imageVector = Icons.Filled.Contacts,
                                     contentDescription = null,
-                                    tint = SignalCyan,
+                                    tint = primaryAccent,
                                     modifier = Modifier.size(28.dp)
                                 )
                             }
@@ -235,7 +245,7 @@ fun ContactsAndSettingsScreen(
                 }
             } else {
                 items(filteredContacts, key = { it.normalizedNumber }) { contact ->
-                    val avatarColor = ContactAvatarColors[contact.avatarColorIndex % ContactAvatarColors.size]
+                    val avatarColor = avatarPalette[contact.avatarColorIndex % avatarPalette.size]
                     val initials = contact.displayName.trim().take(1).uppercase()
                     GlassBridgeCard(
                         modifier = Modifier.fillMaxWidth(),
@@ -252,10 +262,10 @@ fun ContactsAndSettingsScreen(
                                 modifier = Modifier
                                     .size(44.dp)
                                     .clip(CircleShape)
-                                    .background(avatarColor.copy(alpha = 0.18f))
+                                    .background(avatarColor.copy(alpha = 0.16f))
                                     .border(
                                         width = 1.5.dp,
-                                        brush = Brush.linearGradient(listOf(avatarColor, SignalCyan)),
+                                        brush = Brush.linearGradient(listOf(avatarColor, primaryAccent)),
                                         shape = CircleShape
                                     ),
                                 contentAlignment = Alignment.Center
@@ -283,10 +293,10 @@ fun ContactsAndSettingsScreen(
                                 }
                             }
                             IconButton(onClick = { onDialContact(contact.phoneNumber) }) {
-                                Icon(Icons.Filled.Call, contentDescription = strings.openDialer, tint = ConnectedEmerald)
+                                Icon(Icons.Filled.Call, contentDescription = strings.openDialer, tint = emeraldAccent)
                             }
                             IconButton(onClick = { onSmsContact(contact.phoneNumber) }) {
-                                Icon(Icons.AutoMirrored.Filled.Message, contentDescription = strings.smsHandoffMode, tint = Sim2Amber)
+                                Icon(Icons.AutoMirrored.Filled.Message, contentDescription = strings.smsHandoffMode, tint = amberAccent)
                             }
                         }
                     }
@@ -297,7 +307,7 @@ fun ContactsAndSettingsScreen(
             item {
                 GlassBridgeCard(
                     modifier = Modifier.fillMaxWidth(),
-                    accentColor = SignalCyan,
+                    accentColor = primaryAccent,
                     accentStrength = 0.3f,
                     cornerRadius = 22.dp
                 ) {
@@ -305,7 +315,12 @@ fun ContactsAndSettingsScreen(
                         modifier = Modifier.padding(18.dp),
                         verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
-                        Text(strings.languageLabel, style = MaterialTheme.typography.titleSmall, color = SignalCyan)
+                        Text(
+                            text = strings.languageLabel,
+                            style = MaterialTheme.typography.titleSmall,
+                            color = primaryAccent,
+                            fontWeight = FontWeight.Bold
+                        )
                         SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                             SegmentedButton(
                                 selected = preferences.languageCode == "fa",
@@ -325,14 +340,60 @@ fun ContactsAndSettingsScreen(
                             }
                         }
 
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.45f))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-                        SettingSwitchRow(
-                            title = strings.darkThemeLabel,
-                            checked = preferences.darkTheme,
-                            onCheckedChange = onSetDarkTheme,
-                            testTag = "settings_dark_theme_switch"
-                        )
+                        // Prominent Manual Light / Dark Mode Override Switch (ignores system theme)
+                        val themeAccent = if (preferences.darkTheme) primaryAccent else amberAccent
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            color = themeAccent.copy(alpha = if (isDark) 0.12f else 0.10f),
+                            border = BorderStroke(1.dp, themeAccent.copy(alpha = 0.35f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(themeAccent.copy(alpha = 0.18f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = if (preferences.darkTheme) Icons.Filled.DarkMode else Icons.Filled.LightMode,
+                                        contentDescription = strings.themeModeTitle,
+                                        tint = themeAccent,
+                                        modifier = Modifier.size(21.dp)
+                                    )
+                                }
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                                ) {
+                                    Text(
+                                        text = strings.themeModeTitle,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = if (preferences.darkTheme) strings.themeModeSubtitleDark else strings.themeModeSubtitleLight,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Switch(
+                                    checked = preferences.darkTheme,
+                                    onCheckedChange = onSetDarkTheme,
+                                    modifier = Modifier.testTag("settings_dark_theme_switch")
+                                )
+                            }
+                        }
 
                         SettingSwitchRow(
                             title = strings.autoReconnectLabel,
@@ -348,9 +409,14 @@ fun ContactsAndSettingsScreen(
                             testTag = "settings_vibrate_switch"
                         )
 
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.45f))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-                        Text(strings.defaultSimLabel, style = MaterialTheme.typography.titleSmall, color = SignalCyan)
+                        Text(
+                            text = strings.defaultSimLabel,
+                            style = MaterialTheme.typography.titleSmall,
+                            color = primaryAccent,
+                            fontWeight = FontWeight.Bold
+                        )
                         SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                             SegmentedButton(
                                 selected = preferences.preferredSimSlot == 1,
@@ -385,12 +451,69 @@ fun ContactsAndSettingsScreen(
                 }
             }
 
+            // Replay Animated Intro Guide Card
+            item {
+                GlassBridgeCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("replay_onboarding_button"),
+                    accentColor = primaryAccent,
+                    accentStrength = 0.42f,
+                    cornerRadius = 20.dp,
+                    onClick = onReplayOnboarding
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(42.dp)
+                                .clip(RoundedCornerShape(13.dp))
+                                .background(primaryAccent.copy(alpha = 0.16f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.PlayCircleOutline,
+                                contentDescription = strings.replayOnboardingLabel,
+                                tint = primaryAccent,
+                                modifier = Modifier.size(23.dp)
+                            )
+                        }
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
+                            Text(
+                                text = strings.replayOnboardingLabel,
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = strings.replayOnboardingSubtitle,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null,
+                            tint = primaryAccent
+                        )
+                    }
+                }
+            }
+
             // Security & Play Creator Compliance Shield Card
             item {
                 GlassBridgeCard(
                     modifier = Modifier.fillMaxWidth(),
-                    accentColor = ConnectedEmerald,
-                    accentStrength = 0.55f,
+                    accentColor = emeraldAccent,
+                    accentStrength = 0.50f,
                     cornerRadius = 22.dp
                 ) {
                     Row(
@@ -402,16 +525,16 @@ fun ContactsAndSettingsScreen(
                             modifier = Modifier
                                 .size(44.dp)
                                 .clip(RoundedCornerShape(14.dp))
-                                .background(ConnectedEmerald.copy(alpha = 0.18f)),
+                                .background(emeraldAccent.copy(alpha = 0.16f)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(Icons.Filled.Security, contentDescription = null, tint = ConnectedEmerald, modifier = Modifier.size(24.dp))
+                            Icon(Icons.Filled.Security, contentDescription = null, tint = emeraldAccent, modifier = Modifier.size(24.dp))
                         }
                         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             Text(
                                 text = strings.playComplianceTitle,
                                 style = MaterialTheme.typography.titleSmall,
-                                color = ConnectedEmerald,
+                                color = emeraldAccent,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
@@ -428,7 +551,7 @@ fun ContactsAndSettingsScreen(
             item {
                 GlassBridgeCard(
                     modifier = Modifier.fillMaxWidth(),
-                    accentColor = SignalCyan,
+                    accentColor = primaryAccent,
                     accentStrength = 0.42f,
                     cornerRadius = 18.dp
                 ) {
@@ -442,7 +565,7 @@ fun ContactsAndSettingsScreen(
                         Icon(
                             imageVector = Icons.Filled.AutoAwesome,
                             contentDescription = null,
-                            tint = SignalCyan,
+                            tint = primaryAccent,
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(Modifier.width(8.dp))

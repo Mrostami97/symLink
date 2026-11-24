@@ -21,7 +21,8 @@ data class UserPreferences(
     val deviceAlias: String = Build.MODEL ?: "Android",
     val preferredSimSlot: Int = 1,
     val autoReconnect: Boolean = true,
-    val vibrateOnIncoming: Boolean = true
+    val vibrateOnIncoming: Boolean = true,
+    val onboardingCompleted: Boolean = false
 )
 
 class UserPreferencesRepository(private val context: Context) {
@@ -34,6 +35,7 @@ class UserPreferencesRepository(private val context: Context) {
         val PREFERRED_SIM = intPreferencesKey("preferred_sim_slot")
         val AUTO_RECONNECT = booleanPreferencesKey("auto_reconnect")
         val VIBRATE_INCOMING = booleanPreferencesKey("vibrate_on_incoming")
+        val ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
     }
 
     val preferencesFlow: Flow<UserPreferences> = context.itellDataStore.data.map { prefs ->
@@ -45,7 +47,8 @@ class UserPreferencesRepository(private val context: Context) {
                 ?: (Build.MODEL ?: "Android"),
             preferredSimSlot = prefs[Keys.PREFERRED_SIM] ?: 1,
             autoReconnect = prefs[Keys.AUTO_RECONNECT] ?: true,
-            vibrateOnIncoming = prefs[Keys.VIBRATE_INCOMING] ?: true
+            vibrateOnIncoming = prefs[Keys.VIBRATE_INCOMING] ?: true,
+            onboardingCompleted = prefs[Keys.ONBOARDING_COMPLETED] ?: false
         )
     }
 
@@ -75,5 +78,9 @@ class UserPreferencesRepository(private val context: Context) {
 
     suspend fun setVibrateOnIncoming(enabled: Boolean) {
         context.itellDataStore.edit { it[Keys.VIBRATE_INCOMING] = enabled }
+    }
+
+    suspend fun setOnboardingCompleted(completed: Boolean) {
+        context.itellDataStore.edit { it[Keys.ONBOARDING_COMPLETED] = completed }
     }
 }

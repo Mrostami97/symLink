@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -60,6 +61,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.bridge.DeviceRole
+import com.example.ui.components.AnimatedOnboardingGuide
 import com.example.ui.components.AtmosphericCanvasBox
 import com.example.ui.components.FloatingGlassNavBar
 import com.example.ui.components.FloatingNavItem
@@ -91,6 +93,7 @@ fun ITellApp(
     val snackbarHostState = remember { SnackbarHostState() }
 
     val prefs by viewModel.preferences.collectAsStateWithLifecycle()
+    val preferencesLoaded by viewModel.preferencesLoaded.collectAsStateWithLifecycle()
     val connectionState by viewModel.connectionState.collectAsStateWithLifecycle()
     val discoveredPeers by viewModel.discoveredPeers.collectAsStateWithLifecycle()
     val hostPayload by viewModel.hostPairingPayload.collectAsStateWithLifecycle()
@@ -112,6 +115,7 @@ fun ITellApp(
     val layoutDirection = if (strings.isPersian) LayoutDirection.Rtl else LayoutDirection.Ltr
     val activeRole = if (prefs.deviceRole == DeviceRole.COMPANION.name) DeviceRole.COMPANION else DeviceRole.HOST
     var showLaunchIntro by remember { mutableStateOf(true) }
+    var replayOnboarding by remember { mutableStateOf(false) }
 
     var hasPhonePerm by remember {
         mutableStateOf(
@@ -265,7 +269,7 @@ fun ITellApp(
         }
     }
 
-    ITellTheme(darkTheme = prefs.darkTheme) {
+    ITellTheme(darkTheme = prefs.darkTheme, isPersian = strings.isPersian) {
         CompositionLocalProvider(
             LocalAppStrings provides strings,
             LocalLayoutDirection provides layoutDirection
@@ -374,7 +378,8 @@ fun ITellApp(
                                             },
                                             onToggleLanguage = {
                                                 viewModel.setLanguage(if (prefs.languageCode == "fa") "en" else "fa")
-                                            }
+                                            },
+                                            onReplayOnboarding = { replayOnboarding = true }
                                         )
                                     }
 
@@ -445,13 +450,35 @@ fun ITellApp(
                                             onSetDeviceAlias = { viewModel.setDeviceAlias(it) },
                                             onSetDefaultSim = { viewModel.setPreferredSimSlot(it) },
                                             onSetAutoReconnect = { viewModel.setAutoReconnect(it) },
-                                            onSetVibrateIncoming = { viewModel.setVibrateOnIncoming(it) }
+                                            onSetVibrateIncoming = { viewModel.setVibrateOnIncoming(it) },
+                                            onReplayOnboarding = { replayOnboarding = true }
                                         )
                                     }
                                 }
                             }
                         }
                     }
+
+                    val showOnboarding = !showLaunchIntro &&
+                        ((preferencesLoaded && !prefs.onboardingCompleted) || replayOnboarding)
+                    AnimatedVisibility(
+                        visible = showOnboarding,
+                        enter = fadeIn(tween(320)),
+                        exit = fadeOut(tween(260))
+                    ) {
+                        AnimatedOnboardingGuide(
+                            isDarkTheme = prefs.darkTheme,
+                            onToggleTheme = { viewModel.setDarkTheme(!prefs.darkTheme) },
+                            onToggleLanguage = {
+                                viewModel.setLanguage(if (prefs.languageCode == "fa") "en" else "fa")
+                            },
+                            onComplete = {
+                                replayOnboarding = false
+                                viewModel.setOnboardingCompleted(true)
+                            }
+                        )
+                    }
+
                     LaunchIntroOverlay(
                         visible = showLaunchIntro,
                         onFinished = { showLaunchIntro = false }

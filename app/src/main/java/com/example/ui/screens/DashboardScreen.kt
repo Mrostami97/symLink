@@ -55,6 +55,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -68,11 +69,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.example.R
 import com.example.bridge.BatteryTimeWindow
@@ -98,10 +101,7 @@ import com.example.ui.components.SimCardTile
 import com.example.ui.components.VoiceTunnelActiveBar
 import com.example.ui.i18n.LocalAppStrings
 import com.example.ui.i18n.localizeDigits
-import com.example.ui.theme.ConnectedEmerald
 import com.example.ui.theme.MonoTechnicalStyle
-import com.example.ui.theme.SignalCyan
-import com.example.ui.theme.Sim2Amber
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -143,15 +143,22 @@ fun DashboardScreen(
     onDismissHandoff: (String) -> Unit,
     onCopyFeedback: (String) -> Unit,
     onToggleLanguage: () -> Unit,
+    onReplayOnboarding: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val strings = LocalAppStrings.current
     val clipboard = LocalClipboardManager.current
+    val primaryAccent = MaterialTheme.colorScheme.primary
+    val emeraldAccent = MaterialTheme.colorScheme.tertiary
+    val amberAccent = MaterialTheme.colorScheme.secondary
     var showQuickHelp by remember { mutableStateOf(false) }
     var guideDismissed by rememberSaveable { mutableStateOf(false) }
 
     if (showQuickHelp) {
-        QuickHelpDialog(onDismiss = { showQuickHelp = false })
+        QuickHelpDialog(
+            onDismiss = { showQuickHelp = false },
+            onReplayAnimatedGuide = onReplayOnboarding
+        )
     }
 
     if (deviceRoleSetting.isBlank()) {
@@ -195,13 +202,13 @@ fun DashboardScreen(
                         Surface(
                             modifier = Modifier.size(48.dp),
                             shape = RoundedCornerShape(16.dp),
-                            color = Color(0xFF0B1220),
+                            color = MaterialTheme.colorScheme.surfaceContainerLowest,
                             border = BorderStroke(
                                 1.2.dp,
                                 Brush.linearGradient(
                                     listOf(
-                                        SignalCyan.copy(alpha = 0.8f),
-                                        ConnectedEmerald.copy(alpha = 0.65f)
+                                        primaryAccent.copy(alpha = 0.8f),
+                                        emeraldAccent.copy(alpha = 0.65f)
                                     )
                                 )
                             ),
@@ -231,7 +238,7 @@ fun DashboardScreen(
                                     modifier = Modifier
                                         .size(8.dp)
                                         .clip(CircleShape)
-                                        .background(if (isConnected) ConnectedEmerald else SignalCyan)
+                                        .background(if (isConnected) emeraldAccent else primaryAccent)
                                 )
                             }
                             Text(
@@ -256,13 +263,13 @@ fun DashboardScreen(
                                 .testTag("dashboard_help_button"),
                             shape = RoundedCornerShape(14.dp),
                             color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.85f),
-                            border = BorderStroke(1.dp, Sim2Amber.copy(alpha = 0.35f))
+                            border = BorderStroke(1.dp, amberAccent.copy(alpha = 0.35f))
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.HelpOutline,
                                     contentDescription = strings.helpTitle,
-                                    tint = Sim2Amber,
+                                    tint = amberAccent,
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
@@ -276,13 +283,13 @@ fun DashboardScreen(
                                 .testTag("dashboard_header_qr_button"),
                             shape = RoundedCornerShape(14.dp),
                             color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.85f),
-                            border = BorderStroke(1.dp, ConnectedEmerald.copy(alpha = 0.35f))
+                            border = BorderStroke(1.dp, emeraldAccent.copy(alpha = 0.35f))
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     imageVector = Icons.Filled.QrCode2,
                                     contentDescription = strings.showQr,
-                                    tint = ConnectedEmerald,
+                                    tint = emeraldAccent,
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
@@ -296,7 +303,7 @@ fun DashboardScreen(
                                 .testTag("dashboard_language_toggle"),
                             shape = RoundedCornerShape(14.dp),
                             color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.85f),
-                            border = BorderStroke(1.dp, SignalCyan.copy(alpha = 0.35f))
+                            border = BorderStroke(1.dp, primaryAccent.copy(alpha = 0.35f))
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 10.dp),
@@ -306,7 +313,7 @@ fun DashboardScreen(
                                 Icon(
                                     imageVector = Icons.Filled.Language,
                                     contentDescription = strings.languageLabel,
-                                    tint = SignalCyan,
+                                    tint = primaryAccent,
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Text(
@@ -325,7 +332,7 @@ fun DashboardScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag("role_segmented_row"),
-                    accentColor = SignalCyan,
+                    accentColor = primaryAccent,
                     accentStrength = 0.25f,
                     cornerRadius = 18.dp
                 ) {
@@ -339,7 +346,7 @@ fun DashboardScreen(
                             label = strings.roleHost,
                             icon = Icons.Filled.WifiTethering,
                             selected = activeRole == DeviceRole.HOST,
-                            accent = SignalCyan,
+                            accent = primaryAccent,
                             onClick = { onSelectRole(DeviceRole.HOST) },
                             modifier = Modifier
                                 .weight(1f)
@@ -349,7 +356,7 @@ fun DashboardScreen(
                             label = strings.roleCompanion,
                             icon = Icons.Filled.PhoneAndroid,
                             selected = activeRole == DeviceRole.COMPANION,
-                            accent = ConnectedEmerald,
+                            accent = emeraldAccent,
                             onClick = { onSelectRole(DeviceRole.COMPANION) },
                             modifier = Modifier
                                 .weight(1f)
@@ -437,7 +444,7 @@ fun DashboardScreen(
                     icon = Icons.Filled.SignalCellularAlt,
                     label = strings.signalStrengthLabel,
                     value = "$maxSignalLevel/4".localizeDigits(strings.isPersian),
-                    accent = SignalCyan,
+                    accent = primaryAccent,
                     modifier = Modifier.weight(1f)
                 )
                 val batValue = if (displayedTelemetry.batteryPercent >= 0) {
@@ -449,7 +456,7 @@ fun DashboardScreen(
                     icon = if (displayedTelemetry.isCharging) Icons.Filled.BatteryChargingFull else Icons.Filled.BatteryStd,
                     label = strings.hostBattery,
                     value = batValue,
-                    accent = if (displayedTelemetry.batteryPercent in 0..25) Sim2Amber else ConnectedEmerald,
+                    accent = if (displayedTelemetry.batteryPercent in 0..25) amberAccent else emeraldAccent,
                     modifier = Modifier.weight(1f)
                 )
                 TelemetryMetricPill(
@@ -460,7 +467,7 @@ fun DashboardScreen(
                     } else {
                         "AES"
                     },
-                    accent = Sim2Amber,
+                    accent = amberAccent,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -472,7 +479,7 @@ fun DashboardScreen(
                 DashboardSectionHeader(
                     icon = Icons.Filled.NotificationsActive,
                     title = strings.pendingHandoffRequests,
-                    accent = Sim2Amber
+                    accent = amberAccent
                 )
             }
             items(pendingHandoffs, key = { it.id }) { handoff ->
@@ -488,7 +495,7 @@ fun DashboardScreen(
         item {
             GlassBridgeCard(
                 modifier = Modifier.fillMaxWidth(),
-                accentColor = SignalCyan,
+                accentColor = primaryAccent,
                 accentStrength = 0.28f
             ) {
                 Column(
@@ -503,10 +510,10 @@ fun DashboardScreen(
                         DashboardSectionHeader(
                             icon = Icons.Filled.SimCard,
                             title = strings.dualSimStatus,
-                            accent = SignalCyan
+                            accent = primaryAccent
                         )
                         if (displayedTelemetry.batteryPercent >= 0) {
-                            val batColor = if (displayedTelemetry.batteryPercent > 25) ConnectedEmerald else Sim2Amber
+                            val batColor = if (displayedTelemetry.batteryPercent > 25) emeraldAccent else amberAccent
                             Surface(
                                 shape = RoundedCornerShape(50),
                                 color = batColor.copy(alpha = 0.14f),
@@ -537,8 +544,8 @@ fun DashboardScreen(
                     if (activeRole == DeviceRole.HOST && !hasPhonePermission) {
                         Surface(
                             shape = RoundedCornerShape(16.dp),
-                            color = Sim2Amber.copy(alpha = 0.08f),
-                            border = BorderStroke(1.dp, Sim2Amber.copy(alpha = 0.4f))
+                            color = amberAccent.copy(alpha = 0.08f),
+                            border = BorderStroke(1.dp, amberAccent.copy(alpha = 0.4f))
                         ) {
                             Row(
                                 modifier = Modifier
@@ -550,7 +557,7 @@ fun DashboardScreen(
                                 Icon(
                                     imageVector = Icons.Filled.SimCardAlert,
                                     contentDescription = null,
-                                    tint = Sim2Amber
+                                    tint = amberAccent
                                 )
                                 Text(
                                     text = strings.grantPhonePermForSim,
@@ -592,8 +599,8 @@ fun DashboardScreen(
                     // Live Status-Bar Signal & Notification callout
                     Surface(
                         shape = RoundedCornerShape(14.dp),
-                        color = SignalCyan.copy(alpha = 0.08f),
-                        border = BorderStroke(1.dp, SignalCyan.copy(alpha = 0.25f))
+                        color = primaryAccent.copy(alpha = 0.08f),
+                        border = BorderStroke(1.dp, primaryAccent.copy(alpha = 0.25f))
                     ) {
                         Row(
                             modifier = Modifier
@@ -605,7 +612,7 @@ fun DashboardScreen(
                             Icon(
                                 imageVector = Icons.Filled.NotificationsActive,
                                 contentDescription = null,
-                                tint = SignalCyan,
+                                tint = primaryAccent,
                                 modifier = Modifier.size(18.dp)
                             )
                             Text(
@@ -638,7 +645,7 @@ fun DashboardScreen(
 
         // System Default Phone & Messages Integration Card
         item {
-            val statusColor = if (isCallingAccountEnabled) ConnectedEmerald else Sim2Amber
+            val statusColor = if (isCallingAccountEnabled) emeraldAccent else amberAccent
             GlassBridgeCard(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -723,8 +730,8 @@ fun DashboardScreen(
                                 .testTag("enable_calling_account_button"),
                             shape = RoundedCornerShape(14.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Sim2Amber,
-                                contentColor = Color(0xFF1A1200)
+                                containerColor = amberAccent,
+                                contentColor = MaterialTheme.colorScheme.onSecondary
                             )
                         ) {
                             Icon(Icons.Filled.SettingsPhone, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -745,8 +752,8 @@ fun DashboardScreen(
                                 .testTag("open_default_phone_button"),
                             shape = RoundedCornerShape(14.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = ConnectedEmerald.copy(alpha = 0.18f),
-                                contentColor = ConnectedEmerald
+                                containerColor = emeraldAccent.copy(alpha = 0.16f),
+                                contentColor = emeraldAccent
                             )
                         ) {
                             Icon(Icons.Filled.Call, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -766,8 +773,8 @@ fun DashboardScreen(
                                 .testTag("open_default_messages_button"),
                             shape = RoundedCornerShape(14.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = SignalCyan.copy(alpha = 0.18f),
-                                contentColor = SignalCyan
+                                containerColor = primaryAccent.copy(alpha = 0.16f),
+                                contentColor = primaryAccent
                             )
                         ) {
                             Icon(Icons.AutoMirrored.Filled.Message, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -789,7 +796,7 @@ fun DashboardScreen(
             item {
                 GlassBridgeCard(
                     modifier = Modifier.fillMaxWidth(),
-                    accentColor = SignalCyan,
+                    accentColor = primaryAccent,
                     accentStrength = 0.42f,
                     cornerRadius = 22.dp
                 ) {
@@ -800,7 +807,7 @@ fun DashboardScreen(
                         DashboardSectionHeader(
                             icon = Icons.Filled.Key,
                             title = strings.latestOtpTitle,
-                            accent = SignalCyan
+                            accent = primaryAccent
                         )
                         OtpCodeChip(
                             otpCode = otpCode,
@@ -820,7 +827,7 @@ fun DashboardScreen(
                 DashboardSectionHeader(
                     icon = Icons.Filled.Bolt,
                     title = strings.quickActions,
-                    accent = SignalCyan
+                    accent = primaryAccent
                 )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -830,7 +837,7 @@ fun DashboardScreen(
                         icon = Icons.Filled.ContentPasteGo,
                         title = strings.shareClipboardOtp,
                         subtitle = strings.quickSubtitleOtp,
-                        accent = SignalCyan,
+                        accent = primaryAccent,
                         onClick = onRelayClipboardOtp,
                         modifier = Modifier
                             .weight(1f)
@@ -840,7 +847,7 @@ fun DashboardScreen(
                         icon = Icons.Filled.GraphicEq,
                         title = if (voiceTunnelState.isActive) strings.stopVoiceTunnel else strings.startVoiceTunnel,
                         subtitle = strings.quickSubtitleVoice,
-                        accent = ConnectedEmerald,
+                        accent = emeraldAccent,
                         onClick = onToggleVoiceTunnel,
                         modifier = Modifier
                             .weight(1f)
@@ -855,7 +862,7 @@ fun DashboardScreen(
                         icon = Icons.Filled.QrCode2,
                         title = if (activeRole == DeviceRole.HOST) strings.showQr else strings.scanQr,
                         subtitle = strings.quickSubtitleQr,
-                        accent = Sim2Amber,
+                        accent = amberAccent,
                         onClick = onNavigatePairing,
                         modifier = Modifier
                             .weight(1f)
@@ -865,7 +872,7 @@ fun DashboardScreen(
                         icon = Icons.Filled.Security,
                         title = strings.encryptedTunnel,
                         subtitle = strings.quickSubtitleSecurity,
-                        accent = MaterialTheme.colorScheme.primary,
+                        accent = primaryAccent,
                         onClick = onNavigatePairing,
                         modifier = Modifier
                             .weight(1f)
@@ -880,7 +887,7 @@ fun DashboardScreen(
             DashboardSectionHeader(
                 icon = Icons.Filled.History,
                 title = strings.recentBridgeEvents,
-                accent = ConnectedEmerald
+                accent = emeraldAccent
             )
         }
 
@@ -903,13 +910,13 @@ fun DashboardScreen(
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(SignalCyan.copy(alpha = 0.12f)),
+                                .background(primaryAccent.copy(alpha = 0.12f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.HistoryToggleOff,
                                 contentDescription = null,
-                                tint = SignalCyan,
+                                tint = primaryAccent,
                                 modifier = Modifier.size(21.dp)
                             )
                         }
@@ -1044,13 +1051,15 @@ private fun TelemetryMetricPill(
                     modifier = Modifier.size(16.dp)
                 )
             }
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1
-            )
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1
+                )
+            }
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelSmall,
@@ -1069,6 +1078,8 @@ private fun FirstRunRolePicker(
     modifier: Modifier = Modifier
 ) {
     val strings = LocalAppStrings.current
+    val primaryAccent = MaterialTheme.colorScheme.primary
+    val emeraldAccent = MaterialTheme.colorScheme.tertiary
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -1097,8 +1108,8 @@ private fun FirstRunRolePicker(
                         Surface(
                             modifier = Modifier.size(38.dp),
                             shape = RoundedCornerShape(12.dp),
-                            color = Color(0xFF0B1220),
-                            border = BorderStroke(1.dp, SignalCyan.copy(alpha = 0.6f))
+                            color = MaterialTheme.colorScheme.surfaceContainerLowest,
+                            border = BorderStroke(1.dp, primaryAccent.copy(alpha = 0.6f))
                         ) {
                             Image(
                                 painter = painterResource(id = R.drawable.itell_icon_fg_1795555028207),
@@ -1109,13 +1120,13 @@ private fun FirstRunRolePicker(
                         }
                         Surface(
                             shape = RoundedCornerShape(50),
-                            color = Color(0xCC070A10),
-                            border = BorderStroke(1.dp, SignalCyan.copy(alpha = 0.45f))
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.90f),
+                            border = BorderStroke(1.dp, primaryAccent.copy(alpha = 0.45f))
                         ) {
                             Text(
                                 text = strings.appTitle,
                                 style = MaterialTheme.typography.titleMedium,
-                                color = SignalCyan,
+                                color = primaryAccent,
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
                             )
@@ -1127,19 +1138,19 @@ private fun FirstRunRolePicker(
                             .clickable(onClick = onToggleLanguage)
                             .testTag("onboarding_language_button"),
                         shape = RoundedCornerShape(50),
-                        color = Color(0xCC070A10),
-                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.22f))
+                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.90f),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            Icon(Icons.Filled.Language, contentDescription = null, tint = SignalCyan, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Filled.Language, contentDescription = null, tint = primaryAccent, modifier = Modifier.size(16.dp))
                             Text(
                                 text = if (strings.isPersian) "English" else "فارسی",
                                 style = MaterialTheme.typography.labelMedium,
-                                color = Color.White
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -1154,13 +1165,13 @@ private fun FirstRunRolePicker(
                     Text(
                         text = strings.chooseDeviceRoleTitle,
                         style = MaterialTheme.typography.headlineSmall,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
                         text = strings.chooseDeviceRoleSubtitle,
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFFCBD5E1)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -1171,7 +1182,7 @@ private fun FirstRunRolePicker(
                 title = strings.roleHost,
                 description = strings.roleHostDesc,
                 badgeText = "SIM 1/2 • QR",
-                accent = SignalCyan,
+                accent = primaryAccent,
                 onClick = { onSelectRole(DeviceRole.HOST) },
                 modifier = Modifier.testTag("choose_host_role_card")
             )
@@ -1182,7 +1193,7 @@ private fun FirstRunRolePicker(
                 title = strings.roleCompanion,
                 description = strings.roleCompanionDesc,
                 badgeText = "Phone • SMS • Live Signal",
-                accent = ConnectedEmerald,
+                accent = emeraldAccent,
                 onClick = { onSelectRole(DeviceRole.COMPANION) },
                 modifier = Modifier.testTag("choose_companion_role_card")
             )
@@ -1190,7 +1201,7 @@ private fun FirstRunRolePicker(
         item {
             GlassBridgeCard(
                 modifier = Modifier.fillMaxWidth(),
-                accentColor = ConnectedEmerald,
+                accentColor = emeraldAccent,
                 accentStrength = 0.32f,
                 cornerRadius = 18.dp
             ) {
@@ -1202,13 +1213,13 @@ private fun FirstRunRolePicker(
                     Icon(
                         imageVector = Icons.Filled.Security,
                         contentDescription = null,
-                        tint = ConnectedEmerald
+                        tint = emeraldAccent
                     )
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(
                             text = strings.playComplianceTitle,
                             style = MaterialTheme.typography.titleSmall,
-                            color = ConnectedEmerald,
+                            color = emeraldAccent,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
@@ -1223,7 +1234,7 @@ private fun FirstRunRolePicker(
         item {
             GlassBridgeCard(
                 modifier = Modifier.fillMaxWidth(),
-                accentColor = SignalCyan,
+                accentColor = primaryAccent,
                 accentStrength = 0.42f,
                 cornerRadius = 16.dp
             ) {
@@ -1237,7 +1248,7 @@ private fun FirstRunRolePicker(
                     Icon(
                         imageVector = Icons.Filled.AutoAwesome,
                         contentDescription = null,
-                        tint = SignalCyan,
+                        tint = primaryAccent,
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(Modifier.width(8.dp))
@@ -1396,12 +1407,13 @@ private fun PendingHandoffCard(
     onDismiss: () -> Unit
 ) {
     val strings = LocalAppStrings.current
+    val amberAccent = MaterialTheme.colorScheme.secondary
     val isDial = handoff.type == HandoffType.DIAL_REQUEST
     GlassBridgeCard(
         modifier = Modifier
             .fillMaxWidth()
             .testTag("pending_handoff_${handoff.id}"),
-        accentColor = Sim2Amber,
+        accentColor = amberAccent,
         accentStrength = 0.7f,
         cornerRadius = 20.dp
     ) {
@@ -1417,26 +1429,28 @@ private fun PendingHandoffCard(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Sim2Amber.copy(alpha = 0.16f)),
+                        .background(amberAccent.copy(alpha = 0.16f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = if (isDial) Icons.Filled.Call else Icons.AutoMirrored.Filled.Message,
                         contentDescription = null,
-                        tint = Sim2Amber
+                        tint = amberAccent
                     )
                 }
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = if (isDial) strings.incomingDialRequest else strings.incomingSmsRequest,
                         style = MaterialTheme.typography.titleSmall,
-                        color = Sim2Amber
+                        color = amberAccent
                     )
-                    Text(
-                        text = "${handoff.phoneNumber} • ${strings.simSlotLabel} ${handoff.simSlot}".localizeDigits(strings.isPersian),
-                        style = MonoTechnicalStyle,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                        Text(
+                            text = "${handoff.phoneNumber} • ${strings.simSlotLabel} ${handoff.simSlot}".localizeDigits(strings.isPersian),
+                            style = MonoTechnicalStyle,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                     if (handoff.body.isNotBlank()) {
                         Text(
                             text = handoff.body,
@@ -1454,7 +1468,7 @@ private fun PendingHandoffCard(
                     modifier = Modifier
                         .weight(1f)
                         .height(48.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Sim2Amber, contentColor = MaterialTheme.colorScheme.onSecondary),
+                    colors = ButtonDefaults.buttonColors(containerColor = amberAccent, contentColor = MaterialTheme.colorScheme.onSecondary),
                     shape = RoundedCornerShape(14.dp)
                 ) {
                     Text(if (isDial) strings.openDialer else strings.openSmsApp, fontWeight = FontWeight.Bold)
@@ -1474,6 +1488,7 @@ private fun PendingHandoffCard(
 @Composable
 private fun RecentEventRow(event: BridgeCallEventEntity) {
     val strings = LocalAppStrings.current
+    val primaryAccent = MaterialTheme.colorScheme.primary
     val label = when (event.eventType) {
         "INCOMING_ALERT" -> strings.callTypeIncoming
         "VOICE_TUNNEL" -> strings.callTypeVoiceTunnel
@@ -1482,7 +1497,7 @@ private fun RecentEventRow(event: BridgeCallEventEntity) {
     val timeText = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(event.timestamp))
     GlassBridgeCard(
         modifier = Modifier.fillMaxWidth(),
-        accentColor = SignalCyan,
+        accentColor = primaryAccent,
         accentStrength = 0.22f,
         cornerRadius = 16.dp
     ) {
@@ -1495,13 +1510,13 @@ private fun RecentEventRow(event: BridgeCallEventEntity) {
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(SignalCyan.copy(alpha = 0.14f)),
+                    .background(primaryAccent.copy(alpha = 0.14f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = if (event.eventType == "VOICE_TUNNEL") Icons.Filled.GraphicEq else Icons.Filled.PhoneAndroid,
                     contentDescription = null,
-                    tint = SignalCyan,
+                    tint = primaryAccent,
                     modifier = Modifier.size(19.dp)
                 )
             }

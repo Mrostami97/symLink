@@ -1,10 +1,12 @@
 package com.example.bridge
 
 import android.content.Intent
+import android.graphics.Color as AndroidColor
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
@@ -50,11 +52,8 @@ import com.example.ui.components.GlassBridgeCard
 import com.example.ui.i18n.LocalAppStrings
 import com.example.ui.i18n.localizeDigits
 import com.example.ui.i18n.stringsForLanguage
-import com.example.ui.theme.ConnectedEmerald
 import com.example.ui.theme.ITellTheme
 import com.example.ui.theme.MonoTechnicalStyle
-import com.example.ui.theme.SignalCyan
-import com.example.ui.theme.Sim2Amber
 
 /**
  * Lightweight system handoff sheet invoked directly when the user taps Call (tel:) or SMS (smsto:)
@@ -64,7 +63,10 @@ class BridgeSystemRouterActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(AndroidColor.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(AndroidColor.TRANSPARENT)
+        )
 
         val action = intent?.action.orEmpty()
         val dataUri: Uri? = intent?.data
@@ -84,7 +86,10 @@ class BridgeSystemRouterActivity : ComponentActivity() {
             val sim1Name = telemetry?.simCards?.firstOrNull { it.slotIndex == 1 }?.carrierName ?: "SIM 1"
             val sim2Name = telemetry?.simCards?.firstOrNull { it.slotIndex == 2 }?.carrierName ?: "SIM 2"
 
-            ITellTheme(darkTheme = BridgeSessionHub.darkTheme) {
+            ITellTheme(darkTheme = BridgeSessionHub.darkTheme, isPersian = strings.isPersian) {
+                val primaryAccent = MaterialTheme.colorScheme.primary
+                val emeraldAccent = MaterialTheme.colorScheme.tertiary
+                val amberAccent = MaterialTheme.colorScheme.secondary
                 CompositionLocalProvider(
                     LocalAppStrings provides strings,
                     LocalLayoutDirection provides layoutDir
@@ -92,7 +97,7 @@ class BridgeSystemRouterActivity : ComponentActivity() {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(Color(0xB8070A10))
+                            .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.62f))
                             .navigationBarsPadding()
                             .imePadding()
                             .padding(18.dp),
@@ -100,7 +105,7 @@ class BridgeSystemRouterActivity : ComponentActivity() {
                     ) {
                         GlassBridgeCard(
                             modifier = Modifier.fillMaxWidth(),
-                            accentColor = if (isSmsMode) Sim2Amber else ConnectedEmerald,
+                            accentColor = if (isSmsMode) amberAccent else emeraldAccent,
                             accentStrength = 0.6f,
                             cornerRadius = 24.dp
                         ) {
@@ -111,13 +116,15 @@ class BridgeSystemRouterActivity : ComponentActivity() {
                                 Text(
                                     text = if (isSmsMode) strings.smsHandoffMode else strings.sendDialToHost,
                                     style = MaterialTheme.typography.titleLarge,
-                                    color = if (isSmsMode) Sim2Amber else ConnectedEmerald
+                                    color = if (isSmsMode) amberAccent else emeraldAccent
                                 )
-                                Text(
-                                    text = targetNumber.ifBlank { strings.dialerPlaceholder },
-                                    style = MonoTechnicalStyle,
-                                    color = SignalCyan
-                                )
+                                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                                    Text(
+                                        text = targetNumber.ifBlank { strings.dialerPlaceholder },
+                                        style = MonoTechnicalStyle,
+                                        color = primaryAccent
+                                    )
+                                }
 
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
@@ -184,8 +191,8 @@ class BridgeSystemRouterActivity : ComponentActivity() {
                                             .height(50.dp),
                                         shape = RoundedCornerShape(14.dp),
                                         colors = ButtonDefaults.buttonColors(
-                                            containerColor = if (isSmsMode) Sim2Amber else ConnectedEmerald,
-                                            contentColor = Color(0xFF002419)
+                                            containerColor = if (isSmsMode) amberAccent else emeraldAccent,
+                                            contentColor = if (isSmsMode) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onTertiary
                                         )
                                     ) {
                                         Icon(

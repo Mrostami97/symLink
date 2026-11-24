@@ -10,74 +10,96 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 
 val LocalIsDarkTheme = staticCompositionLocalOf { true }
+val LocalIsPersianRtl = staticCompositionLocalOf { true }
 
-private val ITellDarkColorScheme = darkColorScheme(
+/**
+ * Full Material 3 Obsidian Midnight Dark ColorScheme (complete 30+ M3 token set).
+ */
+private val ObsidianDarkColorScheme = darkColorScheme(
     primary = SignalCyan,
     onPrimary = OnSignalCyan,
     primaryContainer = SignalCyanContainer,
-    onPrimaryContainer = Color(0xFFA5F3FC),
+    onPrimaryContainer = OnSignalCyanContainer,
+    inversePrimary = SignalCyanDark,
     secondary = Sim2Amber,
     onSecondary = OnSim2Amber,
     secondaryContainer = Sim2AmberContainer,
-    onSecondaryContainer = Color(0xFFFDE68A),
+    onSecondaryContainer = OnSim2AmberContainer,
     tertiary = ConnectedEmerald,
     onTertiary = OnConnectedEmerald,
     tertiaryContainer = ConnectedEmeraldContainer,
-    onTertiaryContainer = Color(0xFFA7F3D0),
+    onTertiaryContainer = OnConnectedEmeraldContainer,
     background = ObsidianBackground,
     onBackground = TextPrimaryDark,
     surface = ObsidianSurface,
     onSurface = TextPrimaryDark,
     surfaceVariant = ObsidianSurfaceContainer,
     onSurfaceVariant = TextSecondaryDark,
+    surfaceTint = SignalCyan,
+    inverseSurface = InverseSurfaceDark,
+    inverseOnSurface = InverseOnSurfaceDark,
+    surfaceDim = ObsidianSurfaceDim,
+    surfaceBright = ObsidianSurfaceBright,
     surfaceContainerLowest = ObsidianBackground,
     surfaceContainerLow = ObsidianSurface,
     surfaceContainer = ObsidianSurfaceContainer,
     surfaceContainerHigh = ObsidianSurfaceHigh,
-    surfaceContainerHighest = Color(0xFF23324B),
+    surfaceContainerHighest = ObsidianSurfaceHighest,
     outline = ObsidianBorder,
-    outlineVariant = Color(0xFF1A2538),
+    outlineVariant = ObsidianBorderSubtle,
+    scrim = ObsidianScrim,
     error = AlertCrimson,
-    onError = Color.White,
+    onError = OnAlertCrimson,
     errorContainer = AlertCrimsonContainer,
-    onErrorContainer = Color(0xFFFECACA)
+    onErrorContainer = OnAlertCrimsonContainer
 )
 
-private val ITellLightColorScheme = lightColorScheme(
+/**
+ * Full Material 3 High-Contrast Daylight Light ColorScheme (complete 30+ M3 token set).
+ * Tuned for WCAG AA/AAA legibility in both Persian RTL and English LTR layouts.
+ */
+private val SimLinkLightColorScheme = lightColorScheme(
     primary = LightPrimary,
-    onPrimary = Color.White,
+    onPrimary = LightOnPrimary,
     primaryContainer = LightPrimaryContainer,
-    onPrimaryContainer = Color(0xFF00354A),
-    secondary = Color(0xFFD97706),
-    onSecondary = Color.White,
-    secondaryContainer = Color(0xFFFEF3C7),
-    onSecondaryContainer = Color(0xFF451A03),
-    tertiary = Color(0xFF059669),
-    onTertiary = Color.White,
-    tertiaryContainer = Color(0xFFD1FAE5),
-    onTertiaryContainer = Color(0xFF064E3B),
+    onPrimaryContainer = LightOnPrimaryContainer,
+    inversePrimary = SignalCyan,
+    secondary = LightSecondary,
+    onSecondary = LightOnSecondary,
+    secondaryContainer = LightSecondaryContainer,
+    onSecondaryContainer = LightOnSecondaryContainer,
+    tertiary = LightTertiary,
+    onTertiary = LightOnTertiary,
+    tertiaryContainer = LightTertiaryContainer,
+    onTertiaryContainer = LightOnTertiaryContainer,
     background = LightBackground,
-    onBackground = LightTextPrimary,
+    onBackground = TextPrimaryLight,
     surface = LightSurface,
-    onSurface = LightTextPrimary,
+    onSurface = TextPrimaryLight,
     surfaceVariant = LightSurfaceContainer,
-    onSurfaceVariant = LightTextSecondary,
+    onSurfaceVariant = TextSecondaryLight,
+    surfaceTint = LightPrimary,
+    inverseSurface = InverseSurfaceLight,
+    inverseOnSurface = InverseOnSurfaceLight,
+    surfaceDim = LightSurfaceDim,
+    surfaceBright = LightSurfaceBright,
     surfaceContainerLowest = LightSurface,
-    surfaceContainerLow = LightBackground,
+    surfaceContainerLow = LightSurfaceContainerLow,
     surfaceContainer = LightSurfaceContainer,
     surfaceContainerHigh = LightSurfaceHigh,
+    surfaceContainerHighest = LightSurfaceHighest,
     outline = LightBorder,
-    outlineVariant = Color(0xFFE2E8F0),
-    error = Color(0xFFDC2626),
-    onError = Color.White,
-    errorContainer = Color(0xFFFEE2E2),
-    onErrorContainer = Color(0xFF7F1D1D)
+    outlineVariant = LightBorderSubtle,
+    scrim = ObsidianScrim,
+    error = LightError,
+    onError = LightOnError,
+    errorContainer = LightErrorContainer,
+    onErrorContainer = LightOnErrorContainer
 )
 
 val ITellShapes = Shapes(
@@ -88,12 +110,20 @@ val ITellShapes = Shapes(
     extraLarge = RoundedCornerShape(30.dp)
 )
 
+/**
+ * Material 3 theme for SimLink with explicit manual Light/Dark override.
+ * - Forces Dark (ObsidianDarkColorScheme) or Light (SimLinkLightColorScheme) regardless of system settings.
+ * - Dynamically switches system status & navigation bar icon contrast.
+ * - Adapts typography metrics automatically for Persian RTL readability vs English LTR.
+ */
 @Composable
 fun ITellTheme(
     darkTheme: Boolean = true,
+    isPersian: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = if (darkTheme) ITellDarkColorScheme else ITellLightColorScheme
+    val colorScheme = if (darkTheme) ObsidianDarkColorScheme else SimLinkLightColorScheme
+    val typography = typographyForLanguage(isPersian = isPersian)
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
@@ -105,10 +135,13 @@ fun ITellTheme(
         }
     }
 
-    CompositionLocalProvider(LocalIsDarkTheme provides darkTheme) {
+    CompositionLocalProvider(
+        LocalIsDarkTheme provides darkTheme,
+        LocalIsPersianRtl provides isPersian
+    ) {
         MaterialTheme(
             colorScheme = colorScheme,
-            typography = ITellTypography,
+            typography = typography,
             shapes = ITellShapes,
             content = content
         )

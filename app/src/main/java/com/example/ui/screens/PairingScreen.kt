@@ -125,6 +125,8 @@ fun PairingScreen(
     modifier: Modifier = Modifier
 ) {
     val strings = LocalAppStrings.current
+    val primaryAccent = MaterialTheme.colorScheme.primary
+    val emeraldAccent = MaterialTheme.colorScheme.tertiary
     val clipboard = LocalClipboardManager.current
     val haptic = LocalHapticFeedback.current
 
@@ -143,16 +145,18 @@ fun PairingScreen(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(strings.pairingCodeLabel, style = MaterialTheme.typography.bodySmall)
-                    OutlinedTextField(
-                        value = peerDialogCode,
-                        onValueChange = { if (it.length <= 6) peerDialogCode = it },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        label = { Text(strings.pairingCodeLabel) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("peer_pair_code_input")
-                    )
+                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                        OutlinedTextField(
+                            value = peerDialogCode,
+                            onValueChange = { if (it.length <= 6) peerDialogCode = it },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            label = { Text(strings.pairingCodeLabel) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("peer_pair_code_input")
+                        )
+                    }
                 }
             },
             confirmButton = {
@@ -198,12 +202,12 @@ fun PairingScreen(
                     Text(
                         text = if (role == DeviceRole.HOST) strings.hostPairingTitle else strings.companionPairingTitle,
                         style = MaterialTheme.typography.headlineSmall,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = if (role == DeviceRole.HOST) strings.hostPairingSubtitle else strings.companionPairingSubtitle,
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFFCBD5E1)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -214,7 +218,7 @@ fun PairingScreen(
                 if (hostPayload == null) {
                     GlassBridgeCard(
                         modifier = Modifier.fillMaxWidth(),
-                        accentColor = SignalCyan,
+                        accentColor = primaryAccent,
                         accentStrength = 0.35f
                     ) {
                         Column(
@@ -228,13 +232,13 @@ fun PairingScreen(
                                 modifier = Modifier
                                     .size(56.dp)
                                     .clip(RoundedCornerShape(18.dp))
-                                    .background(SignalCyan.copy(alpha = 0.16f)),
+                                    .background(primaryAccent.copy(alpha = 0.16f)),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     imageVector = Icons.Filled.Wifi,
                                     contentDescription = null,
-                                    tint = SignalCyan,
+                                    tint = primaryAccent,
                                     modifier = Modifier.size(30.dp)
                                 )
                             }
@@ -262,7 +266,7 @@ fun PairingScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("host_qr_card"),
-                        accentColor = SignalCyan,
+                        accentColor = primaryAccent,
                         accentStrength = 0.58f,
                         cornerRadius = 26.dp
                     ) {
@@ -293,7 +297,7 @@ fun PairingScreen(
                                         )
                                     }
                                     Canvas(modifier = Modifier.fillMaxSize()) {
-                                        drawCornerBrackets(SignalCyan, cornerLen = 28.dp.toPx(), stroke = 3.5.dp.toPx())
+                                        drawCornerBrackets(primaryAccent, cornerLen = 28.dp.toPx(), stroke = 3.5.dp.toPx())
                                     }
                                 }
                             }
@@ -316,15 +320,15 @@ fun PairingScreen(
                                         hostPayload.pairCode.forEach { digit ->
                                             Surface(
                                                 shape = RoundedCornerShape(12.dp),
-                                                color = SignalCyan.copy(alpha = 0.14f),
-                                                border = BorderStroke(1.dp, SignalCyan.copy(alpha = 0.45f)),
+                                                color = primaryAccent.copy(alpha = 0.14f),
+                                                border = BorderStroke(1.dp, primaryAccent.copy(alpha = 0.45f)),
                                                 modifier = Modifier.size(width = 40.dp, height = 48.dp)
                                             ) {
                                                 Box(contentAlignment = Alignment.Center) {
                                                     Text(
                                                         text = digit.toString(),
                                                         style = MonoDialpadStyle.copy(fontSize = 22.sp),
-                                                        color = SignalCyan
+                                                        color = primaryAccent
                                                     )
                                                 }
                                             }
@@ -337,7 +341,7 @@ fun PairingScreen(
                                             },
                                             modifier = Modifier.testTag("copy_pair_code_button")
                                         ) {
-                                            Icon(Icons.Filled.ContentCopy, contentDescription = strings.copyCode, tint = SignalCyan)
+                                            Icon(Icons.Filled.ContentCopy, contentDescription = strings.copyCode, tint = primaryAccent)
                                         }
                                     }
                                 }
@@ -431,7 +435,7 @@ fun PairingScreen(
             item {
                 GlassBridgeCard(
                     modifier = Modifier.fillMaxWidth(),
-                    accentColor = SignalCyan,
+                    accentColor = primaryAccent,
                     accentStrength = 0.45f
                 ) {
                     Column(
@@ -538,7 +542,7 @@ fun PairingScreen(
                 items(discoveredPeers, key = { it.id }) { peer ->
                     GlassBridgeCard(
                         modifier = Modifier.fillMaxWidth(),
-                        accentColor = SignalCyan,
+                        accentColor = primaryAccent,
                         accentStrength = 0.35f,
                         cornerRadius = 18.dp
                     ) {
@@ -551,13 +555,13 @@ fun PairingScreen(
                                 modifier = Modifier
                                     .size(40.dp)
                                     .clip(RoundedCornerShape(12.dp))
-                                    .background(SignalCyan.copy(alpha = 0.14f)),
+                                    .background(primaryAccent.copy(alpha = 0.14f)),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     imageVector = if (peer.transport == TransportMode.WIFI_TCP) Icons.Filled.Wifi else Icons.Filled.Bluetooth,
                                     contentDescription = null,
-                                    tint = SignalCyan
+                                    tint = primaryAccent
                                 )
                             }
                             Column(modifier = Modifier.weight(1f)) {
@@ -587,7 +591,7 @@ fun PairingScreen(
             item {
                 GlassBridgeCard(
                     modifier = Modifier.fillMaxWidth(),
-                    accentColor = ConnectedEmerald,
+                    accentColor = emeraldAccent,
                     accentStrength = 0.28f,
                     onClick = { showManualConnect = !showManualConnect }
                 ) {
@@ -608,46 +612,48 @@ fun PairingScreen(
                             Icon(
                                 imageVector = if (showManualConnect) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
                                 contentDescription = strings.advancedManualConnect,
-                                tint = ConnectedEmerald
+                                tint = emeraldAccent
                             )
                         }
                         AnimatedVisibility(visible = showManualConnect) {
                             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        OutlinedTextField(
+                                            value = manualIp,
+                                            onValueChange = { manualIp = it },
+                                            label = { Text(strings.hostIpLabel) },
+                                            placeholder = { Text("192.168.43.1") },
+                                            singleLine = true,
+                                            shape = RoundedCornerShape(14.dp),
+                                            modifier = Modifier
+                                                .weight(2f)
+                                                .testTag("manual_ip_input")
+                                        )
+                                        OutlinedTextField(
+                                            value = manualPort,
+                                            onValueChange = { manualPort = it.filter(Char::isDigit).take(5) },
+                                            label = { Text(strings.portLabel) },
+                                            singleLine = true,
+                                            shape = RoundedCornerShape(14.dp),
+                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .testTag("manual_port_input")
+                                        )
+                                    }
                                     OutlinedTextField(
-                                        value = manualIp,
-                                        onValueChange = { manualIp = it },
-                                        label = { Text(strings.hostIpLabel) },
-                                        placeholder = { Text("192.168.43.1") },
-                                        singleLine = true,
-                                        shape = RoundedCornerShape(14.dp),
-                                        modifier = Modifier
-                                            .weight(2f)
-                                            .testTag("manual_ip_input")
-                                    )
-                                    OutlinedTextField(
-                                        value = manualPort,
-                                        onValueChange = { manualPort = it.filter(Char::isDigit).take(5) },
-                                        label = { Text(strings.portLabel) },
+                                        value = manualCode,
+                                        onValueChange = { if (it.length <= 6) manualCode = it },
+                                        label = { Text(strings.pairingCodeLabel) },
                                         singleLine = true,
                                         shape = RoundedCornerShape(14.dp),
                                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                         modifier = Modifier
-                                            .weight(1f)
-                                            .testTag("manual_port_input")
+                                            .fillMaxWidth()
+                                            .testTag("manual_pair_code_input")
                                     )
                                 }
-                                OutlinedTextField(
-                                    value = manualCode,
-                                    onValueChange = { if (it.length <= 6) manualCode = it },
-                                    label = { Text(strings.pairingCodeLabel) },
-                                    singleLine = true,
-                                    shape = RoundedCornerShape(14.dp),
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .testTag("manual_pair_code_input")
-                                )
                                 Button(
                                     onClick = {
                                         val parsedPort = manualPort.toIntOrNull() ?: BridgeProtocol.DEFAULT_PORT
@@ -688,7 +694,7 @@ fun PairingScreen(
             items(savedDevices, key = { it.deviceId }) { device ->
                 GlassBridgeCard(
                     modifier = Modifier.fillMaxWidth(),
-                    accentColor = ConnectedEmerald,
+                    accentColor = emeraldAccent,
                     accentStrength = 0.25f,
                     cornerRadius = 18.dp
                 ) {
@@ -701,18 +707,20 @@ fun PairingScreen(
                             modifier = Modifier
                                 .size(38.dp)
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(ConnectedEmerald.copy(alpha = 0.14f)),
+                                .background(emeraldAccent.copy(alpha = 0.14f)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(Icons.Filled.Devices, contentDescription = null, tint = ConnectedEmerald)
+                            Icon(Icons.Filled.Devices, contentDescription = null, tint = emeraldAccent)
                         }
                         Column(modifier = Modifier.weight(1f)) {
                             Text(device.deviceName, style = MaterialTheme.typography.titleSmall)
-                            Text(
-                                text = "${device.ipAddress}:${device.port} • ${device.fingerprint}",
-                                style = MonoTechnicalStyle,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                                Text(
+                                    text = "${device.ipAddress}:${device.port} • ${device.fingerprint}",
+                                    style = MonoTechnicalStyle,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                         if (role == DeviceRole.COMPANION) {
                             TextButton(onClick = { onReconnectSaved(device) }) {
@@ -740,11 +748,12 @@ private fun TransportPill(
     active: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val tint = if (active) ConnectedEmerald else MaterialTheme.colorScheme.onSurfaceVariant
+    val activeAccent = MaterialTheme.colorScheme.tertiary
+    val tint = if (active) activeAccent else MaterialTheme.colorScheme.onSurfaceVariant
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(12.dp),
-        color = if (active) ConnectedEmerald.copy(alpha = 0.14f) else MaterialTheme.colorScheme.surfaceContainer,
+        color = if (active) activeAccent.copy(alpha = 0.14f) else MaterialTheme.colorScheme.surfaceContainer,
         border = BorderStroke(1.dp, tint.copy(alpha = 0.4f))
     ) {
         Row(

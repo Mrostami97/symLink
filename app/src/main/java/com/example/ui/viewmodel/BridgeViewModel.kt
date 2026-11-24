@@ -81,6 +81,9 @@ class BridgeViewModel(application: Application) : AndroidViewModel(application) 
         initialValue = UserPreferences()
     )
 
+    private val _preferencesLoaded = MutableStateFlow(false)
+    val preferencesLoaded: StateFlow<Boolean> = _preferencesLoaded.asStateFlow()
+
     val connectionState: StateFlow<ConnectionState> = transport.connectionState
     val discoveredPeers: StateFlow<List<DiscoveredPeer>> = transport.discoveredPeers
     val hostPairingPayload: StateFlow<PairingPayload?> = transport.hostPairingPayload
@@ -188,6 +191,7 @@ class BridgeViewModel(application: Application) : AndroidViewModel(application) 
     private fun observePreferencesAndAutoReconnect() {
         viewModelScope.launch {
             prefsRepo.preferencesFlow.collect { pref ->
+                _preferencesLoaded.value = true
                 BridgeSessionHub.languageCode = pref.languageCode
                 BridgeSessionHub.darkTheme = pref.darkTheme
                 BridgeSessionHub.preferredSimSlot = pref.preferredSimSlot
@@ -273,6 +277,10 @@ class BridgeViewModel(application: Application) : AndroidViewModel(application) 
 
     fun setVibrateOnIncoming(enabled: Boolean) {
         viewModelScope.launch { prefsRepo.setVibrateOnIncoming(enabled) }
+    }
+
+    fun setOnboardingCompleted(completed: Boolean) {
+        viewModelScope.launch { prefsRepo.setOnboardingCompleted(completed) }
     }
 
     fun selectBatteryWindow(window: BatteryTimeWindow) {
