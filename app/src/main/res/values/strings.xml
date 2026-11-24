@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">SimLink</string>
+    <string name="notification_channel_bridge_name">SimLink Bridge Service</string>
+    <string name="notification_channel_bridge_desc">Keeps the encrypted Android-to-Android bridge active</string>
+    <string name="notification_channel_alerts_name">Bridge Call &amp; OTP Alerts</string>
+    <string name="notification_channel_alerts_desc">Instant incoming call alerts and relayed OTP verification codes</string>
+</resources>

@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">سیم‌لینک</string>
+    <string name="notification_channel_bridge_name">سرویس پل ارتباطی سیم‌لینک</string>
+    <string name="notification_channel_bridge_desc">اتصال رمزنگاری‌شده بین دو گوشی اندرویدی را فعال نگه می‌دارد</string>
+    <string name="notification_channel_alerts_name">هشدار تماس و کد تایید</string>
+    <string name="notification_channel_alerts_desc">اعلان فوری تماس‌های ورودی و کدهای تایید رله‌شده</string>
+</resources>

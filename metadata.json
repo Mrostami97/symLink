@@ -1,0 +1,6 @@
+{
+  "name": "SimLink",
+  "description": "Android-to-Android Second Phone Bridge with Dual-SIM telemetry, live antenna & battery notifications, native Phone/Messages routing, QR/Wi-Fi/Bluetooth encrypted pairing, and bilingual Persian/English dark UI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
