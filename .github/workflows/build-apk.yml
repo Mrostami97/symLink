@@ -8,6 +8,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: simlink-apk-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -51,13 +55,42 @@ jobs:
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs SimLink-debug.apk
 
       - name: Publish APK
+        if: github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create \
-            "build-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+          main_sha=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')
+          if [[ "$GITHUB_SHA" != "$main_sha" ]]; then
+            echo "A newer commit is on main. Skipping publication."
+            exit 0
+          fi
+
+          tag="build-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          gh release create "$tag" \
             SimLink-debug.apk \
             --target "$GITHUB_SHA" \
             --title "SimLink debug build ${GITHUB_RUN_NUMBER}" \
-            --generate-notes \
-            --prerelease
+            --notes "Signed debug APK for testing. Source commit: $GITHUB_SHA." \
+            --draft
+
+          expected_digest="sha256:$(sha256sum SimLink-debug.apk | cut -d ' ' -f 1)"
+          uploaded_digest=$(gh release view "$tag" --json assets \
+            --jq '.assets[] | select(.name == "SimLink-debug.apk" and .state == "uploaded") | .digest')
+          if [[ "$uploaded_digest" != "$expected_digest" ]]; then
+            echo "::error::The uploaded APK digest does not match the verified build."
+            exit 1
+          fi
+          gh release edit "$tag" --draft=false --latest
+
+          # Retire only previous releases created by this workflow.
+          old_tags=$(gh api --paginate "repos/$GITHUB_REPOSITORY/releases?per_page=100" --jq '
+            .[] | select(
+              .author.login == "github-actions[bot]" and
+              (.tag_name | test("^build-[0-9]+-[0-9]+$")) and
+              (.name | startswith("SimLink debug build "))
+            ) | .tag_name')
+          while IFS= read -r old_tag; do
+            if [[ -n "$old_tag" && "$old_tag" != "$tag" ]]; then
+              gh release delete "$old_tag" --yes
+            fi
+          done <<< "$old_tags"
